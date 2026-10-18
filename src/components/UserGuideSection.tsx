@@ -181,73 +181,121 @@ export const UserGuideSection: React.FC<UserGuideSectionProps> = ({
 
   return (
     <div className="space-y-8">
-      {/* Hero Welcome Banner */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 sm:p-8 shadow-xs transition-colors duration-200">
-        <div className="max-w-3xl space-y-3">
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs font-semibold">
-            <Compass className="w-3.5 h-3.5" />
-            <span>Guide d'Utilisation Officiel · MiniLLM Studio</span>
+      {/* Hero Welcome Banner with Visual 3D Pipeline Showcase */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-white via-indigo-50/30 to-purple-50/20 dark:from-slate-900 dark:via-indigo-950/20 dark:to-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 lg:p-9 shadow-sm transition-colors duration-200">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          {/* Left Column: Headline, Description & CTAs (7 cols) */}
+          <div className="lg:col-span-7 space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs font-semibold shadow-2xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <Compass className="w-3.5 h-3.5" />
+              <span>Laboratoire d'IA Interactif · MiniLLM Studio</span>
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 leading-tight">
+              Comprendre et Piloter <br className="hidden sm:inline" />
+              <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-teal-600 dark:from-indigo-400 dark:via-purple-400 dark:to-teal-400 bg-clip-text text-transparent">
+                chaque Étape d'un LLM
+              </span>
+            </h1>
+
+            <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
+              MiniLLM Studio est un laboratoire pédagogique didactique interactif. De la donnée brute non structurée jusqu'au chatbot de production aligné par renforcement, vous manipulez chaque concept sans boîte noire : <strong>tokens discrets, matrices de probabilités conditionnelles, divergence KL, embeddings 2D et indexation documentaire RAG</strong>.
+            </p>
+
+            <div className="pt-1 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-slate-600 dark:text-slate-300">
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-white/70 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span className="font-medium text-[11px]">100% local dans votre navigateur</span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-white/70 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span className="font-medium text-[11px]">5 étapes didactiques claires</span>
+              </div>
+              <div className="flex items-center gap-2 p-2 rounded-lg bg-white/70 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span className="font-medium text-[11px]">Export JSON & Python pur</span>
+              </div>
+            </div>
+
+            {/* Primary Action Buttons */}
+            <div className="pt-2 flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => onNavigate(completedStepNumbers.length === 0 ? 'prerequisites' : 'donnees')}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all cursor-pointer ring-2 ring-indigo-500/25 hover:scale-[1.02] active:scale-[0.99]"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Commencer ici : Parcours Conseillé ➔</span>
+              </button>
+
+              <button
+                onClick={() => onNavigate('prerequisites')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold text-xs border border-slate-200 dark:border-slate-700 shadow-2xs transition-colors cursor-pointer"
+              >
+                <Compass className="w-3.5 h-3.5 text-indigo-500" />
+                <span>0. Les 3 Prérequis</span>
+              </button>
+
+              <button
+                onClick={() => onNavigate('glossary')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold text-xs border border-slate-200 dark:border-slate-700 shadow-2xs transition-colors cursor-pointer"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Glossaire & Lexique</span>
+              </button>
+
+              <button
+                onClick={() => onNavigate('quiz')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-200 font-semibold text-xs border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer"
+              >
+                <Award className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span>Grand Quiz (8 Q.)</span>
+              </button>
+            </div>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            Comprendre et Piloter chaque Étape d'un LLM
-          </h1>
+          {/* Right Column: Visual Hero 3D Card (5 cols) */}
+          <div className="lg:col-span-5 relative group">
+            <div className="relative rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-700 shadow-xl bg-slate-950">
+              <img
+                src="/src/assets/images/llm_hero_pipeline_1792360725632.jpg"
+                alt="Architecture et Pipeline Didactique d'un Modèle de Langage (LLM)"
+                referrerPolicy="no-referrer"
+                className="w-full h-auto aspect-video object-cover transition-transform duration-700 group-hover:scale-105"
+              />
 
-          <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
-            MiniLLM Studio est un laboratoire pédagogique didactique interactif. De la donnée brute non structurée jusqu'au chatbot de production aligné par renforcement, vous manipulez chaque concept sans boîte noire : <strong>tokens discrets, matrices de probabilités conditionnelles, divergence KL, embeddings 2D et indexation documentaire RAG</strong>.
-          </p>
+              {/* Glassmorphic overlays */}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-transparent to-black/20 pointer-events-none" />
 
-          <div className="pt-2 flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
-            <span className="flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-300">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              Menu latéral rétractable d'un clic (espace de travail optimisé)
-            </span>
-            <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
-            <span className="flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-300">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              100% local dans votre navigateur (zéro API opaque)
-            </span>
-            <span aria-hidden="true" className="text-slate-300 dark:text-slate-700">·</span>
-            <span className="flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-300">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              Export de votre modèle en JSON et Python pur
-            </span>
-          </div>
+              {/* Floating top badge */}
+              <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+                <span className="px-2.5 py-1 rounded-md bg-slate-900/85 backdrop-blur-md border border-white/20 text-[10px] font-mono text-cyan-300 font-semibold flex items-center gap-1.5 shadow-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  PIPELINE NEURONAL · TOKENS ➔ EMBEDDINGS
+                </span>
+                <span className="px-2 py-0.5 rounded-md bg-slate-900/85 backdrop-blur-md border border-white/10 text-[9px] text-slate-300 font-mono">
+                  SIMULATION DIDACTIQUE
+                </span>
+              </div>
 
-          {/* Primary Quick Start CTAs */}
-          <div className="pt-3 flex flex-wrap items-center gap-3">
-            {/* Primary 'Commencer ici' button */}
-            <button
-              onClick={() => onNavigate(completedStepNumbers.length === 0 ? 'prerequisites' : 'donnees')}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow transition-all cursor-pointer ring-2 ring-indigo-500/20"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Commencer ici : Parcours Conseillé ➔</span>
-            </button>
-
-            <button
-              onClick={() => onNavigate('prerequisites')}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-            >
-              <Compass className="w-3.5 h-3.5 text-indigo-500" />
-              <span>0. Les 3 Prérequis</span>
-            </button>
-
-            <button
-              onClick={() => onNavigate('glossary')}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-            >
-              <BookOpen className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Glossaire & Lexique</span>
-            </button>
-
-            <button
-              onClick={() => onNavigate('quiz')}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-200 font-semibold text-xs border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer"
-            >
-              <Award className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>Grand Quiz (8 Q.)</span>
-            </button>
+              {/* Bottom caption bar */}
+              <div className="absolute bottom-3 left-3 right-3 p-2.5 rounded-xl bg-slate-900/90 backdrop-blur-md border border-white/15 text-white flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <span className="text-xs font-bold block text-slate-100 truncate">
+                    Pipeline Didactique Interactif
+                  </span>
+                  <span className="text-[10px] text-slate-300 block truncate">
+                    Tokens · Embeddings 2D · Softmax · Alignement
+                  </span>
+                </div>
+                <button
+                  onClick={() => onNavigate('modele')}
+                  className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold transition-colors cursor-pointer shrink-0 shadow-sm"
+                >
+                  Explorer ➔
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
