@@ -481,7 +481,7 @@ export const ModelWeightsSection: React.FC<ModelWeightsSectionProps> = ({
               Avec <strong>1 token</strong> de mémoire, le mot <em>"le"</em> peut être suivi de <em>"chat"</em>, <em>"loup"</em>, <em>"fromage"</em> au hasard.
             </p>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Avec <strong>2 tokens</strong> (ex: <em>"mange le"</em>), le modèle sait qu'il s'agit d'une action et privilégie immédiatement <em>"fromage"</em> ! C'est le principe fondamental de la fenêtre de contexte des LLM.
+              Avec <strong>2 tokens</strong> (ex: <em>"mange le"</em>), le modèle peut favoriser <em>"fromage"</em> car la paire est fréquente dans le corpus ! C'est le principe fondamental de la fenêtre de contexte des LLM.
             </p>
           </div>
         </div>

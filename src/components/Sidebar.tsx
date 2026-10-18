@@ -52,13 +52,21 @@ interface NavGroup {
 
 export const NAV_GROUPS: NavGroup[] = [
   {
-    title: 'DÉCOUVERTE & QUIZ',
+    title: 'DÉCOUVERTE & FONDATIONS',
     items: [
       {
         id: 'userguide',
         label: '0. Guide Découverte',
         shortLabel: 'Guide',
         icon: BookOpen,
+        colorScheme: 'indigo',
+      },
+      {
+        id: 'prerequisites',
+        label: '0. Prérequis & Notions',
+        shortLabel: 'Prérequis',
+        icon: Compass,
+        badge: '3 Clés',
         colorScheme: 'indigo',
       },
       {
@@ -69,6 +77,14 @@ export const NAV_GROUPS: NavGroup[] = [
         badge: '8 Q.',
         colorScheme: 'emerald',
       },
+      {
+        id: 'glossary',
+        label: 'Glossaire & Lexique',
+        shortLabel: 'Glossaire',
+        icon: BookOpen,
+        badge: 'A-Z',
+        colorScheme: 'emerald',
+      },
     ],
   },
   {
@@ -76,30 +92,30 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       {
         id: 'donnees',
-        label: 'Données & Tokens',
-        shortLabel: 'Données',
+        label: '1. Données & Tokens',
+        shortLabel: '1. Données',
         icon: Database,
         colorScheme: 'indigo',
       },
       {
         id: 'modele',
         label: 'Mon Modèle (2D)',
-        shortLabel: 'Modèle',
+        shortLabel: 'Modèle 2D',
         icon: Layers,
         colorScheme: 'indigo',
       },
       {
         id: 'matrice',
-        label: 'Poids & Matrice',
-        shortLabel: 'Poids',
+        label: '2. Poids & Matrice',
+        shortLabel: '2. Poids',
         icon: Grid,
         badge: 'JSON',
         colorScheme: 'indigo',
       },
       {
         id: 'generation',
-        label: 'Inférence & Softmax',
-        shortLabel: 'Inférence',
+        label: '3. Inférence & Softmax',
+        shortLabel: '3. Inférence',
         icon: Sparkles,
         badge: 'Gradients',
         colorScheme: 'indigo',
@@ -111,15 +127,15 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       {
         id: 'finetune',
-        label: 'Fine-Tuning (SFT)',
-        shortLabel: 'Fine-Tune',
+        label: '4. Fine-Tuning (SFT)',
+        shortLabel: '4. Fine-Tune',
         icon: Sliders,
         colorScheme: 'purple',
       },
       {
         id: 'rlhf',
-        label: 'Renforcement (RLHF/DPO)',
-        shortLabel: 'RLHF/DPO',
+        label: '4. Renforcement (RLHF/DPO)',
+        shortLabel: '4. RLHF/DPO',
         icon: Flame,
         colorScheme: 'rose',
       },
@@ -130,22 +146,22 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       {
         id: 'rag',
-        label: 'RAG Simple',
-        shortLabel: 'RAG',
+        label: '5. RAG Simple',
+        shortLabel: '5. RAG',
         icon: FileText,
         colorScheme: 'emerald',
       },
       {
         id: 'chat',
-        label: 'Chatbot Multi-Moteur',
-        shortLabel: 'Chatbot',
+        label: '5. Chatbot Multi-Moteur',
+        shortLabel: '5. Chatbot',
         icon: MessageSquare,
         colorScheme: 'indigo',
       },
     ],
   },
   {
-    title: 'RÉFÉRENCES',
+    title: '4. RESSOURCES',
     items: [
       {
         id: 'guide',
@@ -176,7 +192,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     setIsMobileOpen(false);
   };
 
-  const localizedGroups = [
+  const localizedGroups: NavGroup[] = [
     {
       title: t('nav.group.discovery'),
       items: [
@@ -188,11 +204,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
           colorScheme: 'indigo' as const,
         },
         {
+          id: 'prerequisites' as ActiveTab,
+          label: t('nav.prerequisites'),
+          shortLabel: t('nav.prerequisites.short'),
+          icon: Compass,
+          badge: t('nav.prerequisites.badge'),
+          colorScheme: 'indigo' as const,
+        },
+        {
           id: 'quiz' as ActiveTab,
           label: t('nav.quiz'),
           shortLabel: t('nav.quiz.short'),
           icon: Award,
           badge: t('nav.quiz.badge'),
+          colorScheme: 'emerald' as const,
+        },
+        {
+          id: 'glossary' as ActiveTab,
+          label: t('nav.glossary'),
+          shortLabel: t('nav.glossary.short'),
+          icon: BookOpen,
+          badge: t('nav.glossary.badge'),
           colorScheme: 'emerald' as const,
         },
       ],
@@ -271,7 +303,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ],
     },
     {
-      title: t('nav.group.docs'),
+      title: t('nav.group.resources') || t('nav.group.docs'),
       items: [
         {
           id: 'guide' as ActiveTab,

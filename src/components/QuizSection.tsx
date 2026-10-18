@@ -73,7 +73,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     ],
     correctIndex: 2,
     explanation:
-      'La perplexité PPL = exp(Cross-Entropy). Une perplexité de 1.0 indique une certitude absolue (100% sur un seul token), tandis qu\'une perplexité élevée signale une incertitude dispersée entre de nombreuses options.',
+      'La perplexité PPL = exp(Cross-Entropy). Une perplexité de 1.0 indique une confiance maximale (100% sur un seul token), tandis qu\'une perplexité élevée signale une incertitude dispersée entre de nombreuses options.',
     conceptKey: 'Perplexité & Certitude du Modèle',
   },
   {
@@ -153,7 +153,7 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     ],
     correctIndex: 1,
     explanation:
-      'Le RAG ne modifie aucun paramètre interne du LLM : il effectue une recherche sémantique dans des documents externes et colle les extraits pertinents dans le prompt, éliminant les hallucinations sur des données privées ou récentes.',
+      'Le RAG ne modifie aucun paramètre interne du LLM : il effectue une recherche sémantique dans des documents externes et colle les extraits pertinents dans le prompt, réduisant fortement les hallucinations sur des données privées ou récentes.',
     conceptKey: 'RAG vs Ré-entraînement',
   },
 ];

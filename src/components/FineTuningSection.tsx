@@ -453,7 +453,7 @@ export const FineTuningSection: React.FC<FineTuningSectionProps> = ({
               </span>
             </div>
             <h4 className="text-sm font-semibold text-white">
-              Pourquoi le Fine-Tuning a révolutionné l'IA ?
+              Pourquoi le Fine-Tuning est-il utile ?
             </h4>
             <p className="text-xs text-slate-300 leading-relaxed">
               Avant le fine-tuning par instructions (ex: InstructGPT), un modèle comme GPT-3 ne répondait pas aux questions : si vous écriviez <em>"Quelle est la capitale de la France ?"</em>, il pouvait continuer par <em>"2. Quelle est la capitale de l'Espagne ?"</em> comme dans un manuel scolaire !

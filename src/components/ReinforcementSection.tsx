@@ -477,8 +477,8 @@ export const ReinforcementSection: React.FC<ReinforcementSectionProps> = ({
                 </div>
                 <p className="text-[11px] text-emerald-800">
                   {rlModel
-                    ? 'Le gradient de politique a écrasé les probabilités des tokens dangereux et favorisé les réponses bienveillantes !'
-                    : 'La politique de sortie pénalisera les comportements indésirables tout en respectant la frontière KL.'}
+                    ? 'Dans cette simulation pédagogique, le gradient de politique atténue fortement les probabilités des tokens dangereux et favorise les réponses bienveillantes (le risque est réduit sans prétendre à un risque nul dans un vrai modèle).'
+                    : 'La politique de sortie pénalisera les comportements indésirables tout en respectant la frontière de divergence KL.'}
                 </p>
               </div>
             </div>

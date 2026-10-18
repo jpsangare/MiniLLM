@@ -97,7 +97,7 @@ export const ModelOverviewSection: React.FC<ModelOverviewSectionProps> = ({
       id: 2,
       title: '2. Encodage & Fenêtre de Contexte',
       subtitle: `Mémoire de ${contextWindow} token(s)`,
-      detail: `Agrège les ${contextWindow} derniers tokens observés pour former la clé de contexte active. C'est l'équivalent du buffer d'entrée du mécanisme d'attention.`,
+      detail: `${contextWindow === 1 ? 'Agrège le dernier token observé' : `Agrège les ${contextWindow} derniers tokens observés`} pour former la clé de contexte active. C'est l'équivalent du buffer d'entrée du mécanisme d'attention.`,
       metric: `${model.contextTransitions.size} contextes appris`,
     },
     {

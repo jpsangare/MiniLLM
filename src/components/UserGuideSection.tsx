@@ -26,14 +26,26 @@ import {
   Award,
   ChevronDown,
   ChevronUp,
+  Grid,
 } from 'lucide-react';
 import { ActiveTab } from './Header';
+import { ModelNatureDisclaimer } from './ModelNatureDisclaimer';
+import { ProgressTrackerCard, CANONICAL_5_STEPS } from './ProgressIndicator';
+import { useLanguage } from '../context/LanguageContext';
 
 interface UserGuideSectionProps {
   onNavigate: (tab: ActiveTab) => void;
+  completedStepNumbers?: number[];
+  onResetProgress?: () => void;
 }
 
-export const UserGuideSection: React.FC<UserGuideSectionProps> = ({ onNavigate }) => {
+export const UserGuideSection: React.FC<UserGuideSectionProps> = ({
+  onNavigate,
+  completedStepNumbers = [],
+  onResetProgress,
+}) => {
+  const { language } = useLanguage();
+  const isFr = language === 'fr';
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   const toggleFaq = (idx: number) => {
@@ -43,104 +55,104 @@ export const UserGuideSection: React.FC<UserGuideSectionProps> = ({ onNavigate }
   const steps = [
     {
       number: '1',
-      title: 'Le Modèle de Base : Données, Poids & Inférence',
+      title: 'Étape 1 : Données d\'Entraînement & Tokenisation',
       tabKey: 'donnees' as ActiveTab,
       subTabs: [
         { label: 'Données & Tokens', key: 'donnees' as ActiveTab },
-        { label: 'Mon Modèle', key: 'modele' as ActiveTab },
-        { label: 'Poids & Matrice', key: 'matrice' as ActiveTab },
-        { label: 'Inférence & Softmax', key: 'generation' as ActiveTab },
+        { label: 'Dictionnaire Vocabulaire', key: 'donnees' as ActiveTab },
       ],
       icon: Database,
-      badge: 'Étape 1 · Pré-entraînement Fondamental',
+      badge: 'Étape 1 · Données & Vocabulaire',
       color: 'border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300',
       description:
-        'Comprenez comment la machine découpe le texte brut en tokens numériques (Token IDs), calcule les statistiques de co-occurrence P(mot suivant | contexte), et génère du texte mot à mot avec la formule Softmax et le curseur de température.',
+        'Comprenez comment la machine découpe le texte brut en tokens discrets et leur assigne des Token IDs uniques. Testez différents corpus bilingues et inspectez la table de fréquence des mots.',
       actions: [
-        'Éditez le corpus textuel libre pour injecter de nouvelles connaissances.',
-        'Consultez la matrice complète des probabilités et téléchargez les poids du modèle en format JSON (checkpoint standard).',
-        'Générez du texte avec le bouton Auto-play (progression en direct dans l\'invite de commande), observez l\'indicateur de Perplexité en temps réel et visualisez les Attention Maps (faisceaux et matrice causale).',
-        'Simulez la rétropropagation (Backpropagation) : visualisez le calcul des gradients ∂Loss/∂z = p - y et la mise à jour des poids par descente de gradient.',
+        'Basculez entre corpus français et anglais (Fables, Cuisine, Météo, Biais).',
+        'Éditez le corpus textuel libre pour injecter de nouvelles phrases d\'apprentissage.',
+        'Observez l\'attribution instantanée des Token IDs et des balises spéciales <DEBUT> et <FIN>.',
       ],
       buttonLabel: 'Explorer les Données & Tokens',
     },
     {
       number: '2',
-      title: 'Fine-Tuning Supervisé (SFT) : Spécialisation en Q/R',
-      tabKey: 'finetune' as ActiveTab,
+      title: 'Étape 2 : Modèle & Poids de Transition',
+      tabKey: 'matrice' as ActiveTab,
       subTabs: [
-        { label: 'Phase 1 : Fine-Tuning (SFT)', key: 'finetune' as ActiveTab },
-        { label: 'Phase 2 : Renforcement (RLHF)', key: 'rlhf' as ActiveTab },
+        { label: 'Poids & Matrice', key: 'matrice' as ActiveTab },
+        { label: 'Mon Modèle (2D)', key: 'modele' as ActiveTab },
       ],
-      icon: Sliders,
-      badge: 'Étape 2 · Alignement Supervisé',
-      color: 'border-purple-200 dark:border-purple-800 bg-purple-50/50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300',
+      icon: Grid,
+      badge: 'Étape 2 · Poids & Probabilités',
+      color: 'border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300',
       description:
-        'Un modèle brut ne sait que compléter des phrases. Le Fine-Tuning (SFT) ajuste ses poids sur des paires « Question ➔ Réponse » pour lui apprendre à adopter le rôle d\'un assistant structuré sans ré-entraîner toute la langue.',
+        'Le modèle apprend en comptant les transitions : P(mot suivant | contexte). Visualisez la matrice complète des probabilités, exportez le checkpoint standard JSON et observez les regroupements de mots en 2D.',
       actions: [
-        'Configurez le taux d\'apprentissage (Learning Rate) et le nombre d\'époques.',
-        'Ajoutez vos propres paires d\'instructions personnalisées.',
-        'Comparez côte à côte : complétion brute (Base) vs réponse ciblée (SFT).',
+        'Consultez la matrice interactive des co-occurrences pour chaque mot.',
+        'Basculez la fenêtre de contexte de 1 à 2 mots précédents.',
+        'Téléchargez les poids du modèle en format JSON ou lancez une session d\'entraînement simulée.',
       ],
-      buttonLabel: 'Pratiquer le Fine-Tuning SFT',
+      buttonLabel: 'Inspecter les Poids & la Matrice',
     },
     {
       number: '3',
-      title: 'Renforcement (RLHF / DPO) : Sécurité & Bienveillance',
-      tabKey: 'rlhf' as ActiveTab,
+      title: 'Étape 3 : Inférence, Softmax & Température',
+      tabKey: 'generation' as ActiveTab,
       subTabs: [
-        { label: 'Phase 2 : Renforcement (RLHF)', key: 'rlhf' as ActiveTab },
-        { label: 'Phase 1 : Fine-Tuning (SFT)', key: 'finetune' as ActiveTab },
+        { label: 'Inférence & Softmax', key: 'generation' as ActiveTab },
+        { label: 'Cartes d\'Attention', key: 'generation' as ActiveTab },
+        { label: 'Gradients & Backprop', key: 'generation' as ActiveTab },
       ],
-      icon: ThumbsUp,
-      badge: 'Étape 3 · Alignement par Préférences',
-      color: 'border-rose-200 dark:border-rose-800 bg-rose-50/50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300',
+      icon: Sparkles,
+      badge: 'Étape 3 · Génération & Échantillonnage',
+      color: 'border-amber-200 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300',
       description:
-        'Le RLHF (Reinforcement Learning from Human Feedback) enseigne la sécurité et la nuance : votez 👍 / 👎 sur des paires de réponses, appliquez une récompense (Reward) et régulez la dérive avec la pénalité de divergence KL.',
+        'Générez du texte mot à mot en direct. Modulez le curseur de Température pour passer d\'une répétition déterministe à une exploration créative, surveillez la perplexité et explorez les Attention Maps.',
       actions: [
-        'Votez sur des paires sensibles (sécurité alimentaire, politesse, exactitude).',
-        'Ajustez l\'échelle de récompense et le coefficient de divergence KL (Beta).',
-        'Visualisez en direct l\'effondrement des probabilités des mots toxiques.',
+        'Lancez l\'Auto-Play pour voir le modèle prédire token par token en direct.',
+        'Ajustez la température de 0.1 à 2.0 et observez l\'aplatissement de la courbe Softmax.',
+        'Activez le visualiseur de rétropropagation pour voir le gradient ∂Loss/∂z = p - y en action.',
       ],
-      buttonLabel: 'Simuler le Renforcement RLHF',
+      buttonLabel: 'Tester l\'Inférence & Softmax',
     },
     {
       number: '4',
-      title: 'Le RAG Simple : Zéro Hallucination avec un Document',
-      tabKey: 'rag' as ActiveTab,
+      title: 'Étape 4 : Alignement (Fine-Tuning SFT & RLHF)',
+      tabKey: 'finetune' as ActiveTab,
       subTabs: [
-        { label: 'RAG Simple (Documents)', key: 'rag' as ActiveTab },
+        { label: 'Phase 1 : Fine-Tuning (SFT)', key: 'finetune' as ActiveTab },
+        { label: 'Phase 2 : Renforcement (RLHF/DPO)', key: 'rlhf' as ActiveTab },
       ],
-      icon: FileText,
-      badge: 'Étape 4 · Connaissance Externe Dynamique',
-      color: 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300',
+      icon: Sliders,
+      badge: 'Étape 4 · Alignement & Sécurité',
+      color: 'border-purple-200 dark:border-purple-800 bg-purple-50/50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300',
       description:
-        'Comment donner des connaissances fraîches ou privées à un LLM sans modifier ses poids ? Le RAG découpe votre document (.txt) en passages (chunks) et injecte l\'extrait pertinent dans le prompt pour garantir une réponse 100% vérifiable.',
+        'Un modèle brut complète sans structure. Le SFT lui apprend le rôle d\'assistant via des paires Q/R, tandis que le RLHF/DPO pénalise les réponses dangereuses sous contrainte de divergence KL.',
       actions: [
-        'Importez un fichier .txt ou collez une notice / règlement d\'entreprise.',
-        'Posez une question et inspectez le score de similarité de chaque chunk.',
-        'Comparez en direct : hallucination sans RAG vs certitude absolue avec RAG.',
+        'Entraînez le modèle sur des paires d\'instructions personnalisées.',
+        'Votez 👍 / 👎 sur des paires de sécurité et appliquez des récompenses.',
+        'Réglez la pénalité de divergence KL pour empêcher le reward hacking.',
       ],
-      buttonLabel: 'Tester le RAG Documentaire',
+      buttonLabel: 'Pratiquer l\'Alignement (SFT & RLHF)',
     },
     {
       number: '5',
-      title: 'Le Chatbot : Dialogue avec vos 4 Moteurs',
-      tabKey: 'chat' as ActiveTab,
+      title: 'Étape 5 : Augmentation RAG & Chatbot Multi-Moteurs',
+      tabKey: 'rag' as ActiveTab,
       subTabs: [
-        { label: 'Chatbot Multi-Moteurs', key: 'chat' as ActiveTab },
+        { label: 'RAG Simple (Documents)', key: 'rag' as ActiveTab },
+        { label: 'Chatbot Multi-Moteur', key: 'chat' as ActiveTab },
       ],
-      icon: Bot,
-      badge: 'Étape 5 · Déploiement & Comparaison',
-      color: 'border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300',
+      icon: FileText,
+      badge: 'Étape 5 · Déploiement & RAG',
+      color: 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300',
       description:
-        'L\'aboutissement concret : une interface de messagerie où vous dialoguez librement avec le modèle en basculant en 1 clic entre le Modèle de Base, la version Fine-tunée, la version alignée par RLHF et le mode RAG.',
+        'Injectez des documents texte (.txt) pour réduire fortement les hallucinations en fournissant les extraits dans le prompt. Concluez par un dialogue libre avec les 4 moteurs dans le Chatbot.',
       actions: [
-        'Basculez d\'un moteur à l\'autre à tout moment de la conversation.',
-        'Activez « Inspecter les Token IDs » pour voir la représentation interne sous chaque bulle.',
-        'Testez comment chaque moteur réagit à la même question.',
+        'Importez une notice ou fiche produit et inspectez les scores de chunks.',
+        'Comparez la réponse sans document avec la réponse ancrée par le RAG.',
+        'Discutez dans le Chatbot en basculant en 1 clic entre Modèle Base, SFT, RLHF et RAG.',
       ],
-      buttonLabel: 'Ouvrir le Chatbot',
+      buttonLabel: 'Explorer le RAG & le Chatbot',
     },
   ];
 
@@ -155,7 +167,7 @@ export const UserGuideSection: React.FC<UserGuideSectionProps> = ({ onNavigate }
     },
     {
       q: 'Pourquoi utiliser le RAG au lieu de fine-tuner le modèle ?',
-      a: 'Le fine-tuning modifie les poids internes du modèle, ce qui demande du calcul et risque d\'introduire des oublis ou des inexactitudes sur les faits précis. Le RAG ne touche pas aux poids : il va chercher le paragraphe exact dans votre fichier texte et l\'injecte directement dans le prompt. C\'est immédiat, gratuit, et garanti sans hallucination.',
+      a: 'Le fine-tuning modifie les poids internes du modèle, ce qui demande du calcul et risque d\'introduire des oublis ou des inexactitudes sur les faits précis. Le RAG ne touche pas aux poids : il va chercher le paragraphe exact dans votre fichier texte et l\'injecte directement dans le prompt. C\'est immédiat, direct et réduit drastiquement les hallucinations en s\'appuyant sur vos textes de référence.',
     },
     {
       q: 'À quoi sert la pénalité de divergence KL (Beta) dans l\'onglet RLHF ?',
@@ -182,7 +194,7 @@ export const UserGuideSection: React.FC<UserGuideSectionProps> = ({ onNavigate }
           </h1>
 
           <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
-            MiniLLM Studio est un laboratoire pédagogique interactif complet. De la donnée brute non structurée jusqu'au chatbot de production aligné par renforcement, vous manipulez chaque concept sans boîte noire : <strong>tokens réels, matrices de probabilités, divergence KL, embeddings 2D et indexation documentaire RAG</strong>.
+            MiniLLM Studio est un laboratoire pédagogique didactique interactif. De la donnée brute non structurée jusqu'au chatbot de production aligné par renforcement, vous manipulez chaque concept sans boîte noire : <strong>tokens discrets, matrices de probabilités conditionnelles, divergence KL, embeddings 2D et indexation documentaire RAG</strong>.
           </p>
 
           <div className="pt-2 flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
@@ -202,25 +214,51 @@ export const UserGuideSection: React.FC<UserGuideSectionProps> = ({ onNavigate }
             </span>
           </div>
 
+          {/* Primary Quick Start CTAs */}
           <div className="pt-3 flex flex-wrap items-center gap-3">
+            {/* Primary 'Commencer ici' button */}
+            <button
+              onClick={() => onNavigate(completedStepNumbers.length === 0 ? 'prerequisites' : 'donnees')}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow transition-all cursor-pointer ring-2 ring-indigo-500/20"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Commencer ici : Parcours Conseillé ➔</span>
+            </button>
+
+            <button
+              onClick={() => onNavigate('prerequisites')}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+            >
+              <Compass className="w-3.5 h-3.5 text-indigo-500" />
+              <span>0. Les 3 Prérequis</span>
+            </button>
+
+            <button
+              onClick={() => onNavigate('glossary')}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Glossaire & Lexique</span>
+            </button>
+
             <button
               onClick={() => onNavigate('quiz')}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-200 font-semibold text-xs border border-emerald-200 dark:border-emerald-800 transition-colors cursor-pointer"
             >
-              <Award className="w-4 h-4" />
-              <span>Tester mes connaissances (Grand Quiz LLM · Page Dédiée) ➔</span>
+              <Award className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>Grand Quiz (8 Q.)</span>
             </button>
           </div>
         </div>
 
-        {/* Global LLM Pipeline Blueprint */}
+        {/* Global LLM Pipeline Blueprint - 5 Canonical Harmonized Steps */}
         <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Le Cycle de Vie Complet d'un Grand Modèle de Langage (LLM) :
+              Le Cycle de Vie Complet d'un Grand Modèle de Langage (LLM) en 5 Étapes :
             </span>
             <span className="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium hidden sm:inline">
-              Cliquez sur un bloc pour y accéder
+              Cliquez sur une étape pour y accéder
             </span>
           </div>
 
@@ -230,11 +268,35 @@ export const UserGuideSection: React.FC<UserGuideSectionProps> = ({ onNavigate }
               className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-left transition-colors cursor-pointer group"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 block">Étape 1</span>
+                <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold block">Étape 1</span>
                 <ArrowRight className="w-3 h-3 text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 group-hover:translate-x-0.5 transition-all" />
               </div>
-              <span className="font-bold text-slate-800 dark:text-slate-200 block mt-1">Pré-entraînement</span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 font-sans">Corpus & Poids de base</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 block mt-1">Données & Tokens</span>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5 font-sans">Corpus & Token IDs</span>
+            </button>
+
+            <button
+              onClick={() => onNavigate('matrice')}
+              className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100/80 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-left transition-colors cursor-pointer group"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold block">Étape 2</span>
+                <ArrowRight className="w-3 h-3 text-blue-400 group-hover:text-blue-700 dark:group-hover:text-blue-200 group-hover:translate-x-0.5 transition-all" />
+              </div>
+              <span className="font-bold text-blue-900 dark:text-blue-200 block mt-1">Poids & Matrice</span>
+              <span className="text-[10px] text-blue-700 dark:text-blue-400 block mt-0.5 font-sans">Probabilités apprises</span>
+            </button>
+
+            <button
+              onClick={() => onNavigate('generation')}
+              className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100/80 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800 text-left transition-colors cursor-pointer group"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold block">Étape 3</span>
+                <ArrowRight className="w-3 h-3 text-amber-400 group-hover:text-amber-700 dark:group-hover:text-amber-200 group-hover:translate-x-0.5 transition-all" />
+              </div>
+              <span className="font-bold text-amber-900 dark:text-amber-200 block mt-1">Inférence & Softmax</span>
+              <span className="text-[10px] text-amber-700 dark:text-amber-400 block mt-0.5 font-sans">Température & Hasard</span>
             </button>
 
             <button
@@ -242,23 +304,11 @@ export const UserGuideSection: React.FC<UserGuideSectionProps> = ({ onNavigate }
               className="p-3 rounded-lg bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100/80 dark:hover:bg-purple-900/60 border border-purple-200 dark:border-purple-800 text-left transition-colors cursor-pointer group"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-purple-500 dark:text-purple-400 block">Étape 2</span>
+                <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold block">Étape 4</span>
                 <ArrowRight className="w-3 h-3 text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-200 group-hover:translate-x-0.5 transition-all" />
               </div>
-              <span className="font-bold text-purple-900 dark:text-purple-200 block mt-1">Fine-Tuning SFT</span>
-              <span className="text-[10px] text-purple-700 dark:text-purple-400 block mt-0.5 font-sans">Apprend à répondre (Q/R)</span>
-            </button>
-
-            <button
-              onClick={() => onNavigate('rlhf')}
-              className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/60 hover:bg-rose-100/80 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800 text-left transition-colors cursor-pointer group"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-rose-500 dark:text-rose-400 block">Étape 3</span>
-                <ArrowRight className="w-3 h-3 text-rose-400 group-hover:text-rose-700 dark:group-hover:text-rose-200 group-hover:translate-x-0.5 transition-all" />
-              </div>
-              <span className="font-bold text-rose-900 dark:text-rose-200 block mt-1">Renforcement RLHF</span>
-              <span className="text-[10px] text-rose-700 dark:text-rose-400 block mt-0.5 font-sans">Préférences, Reward & KL</span>
+              <span className="font-bold text-purple-900 dark:text-purple-200 block mt-1">Alignement</span>
+              <span className="text-[10px] text-purple-700 dark:text-purple-400 block mt-0.5 font-sans">SFT, RLHF & Sécurité</span>
             </button>
 
             <button
@@ -266,45 +316,43 @@ export const UserGuideSection: React.FC<UserGuideSectionProps> = ({ onNavigate }
               className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100/80 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 text-left transition-colors cursor-pointer group"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-emerald-500 block">Étape 4</span>
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold block">Étape 5</span>
                 <ArrowRight className="w-3 h-3 text-emerald-400 group-hover:text-emerald-700 dark:group-hover:text-emerald-200 group-hover:translate-x-0.5 transition-all" />
               </div>
-              <span className="font-bold text-emerald-900 dark:text-emerald-200 block mt-1">RAG Document</span>
-              <span className="text-[10px] text-emerald-700 dark:text-emerald-400 block mt-0.5 font-sans">Chunks & Anti-hallucination</span>
-            </button>
-
-            <button
-              onClick={() => onNavigate('chat')}
-              className="p-3 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100/80 dark:hover:bg-indigo-900/60 border border-indigo-200 dark:border-indigo-800 text-left transition-colors cursor-pointer group"
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-indigo-500 block">Étape 5</span>
-                <ArrowRight className="w-3 h-3 text-indigo-400 group-hover:text-indigo-700 dark:group-hover:text-indigo-200 group-hover:translate-x-0.5 transition-all" />
-              </div>
-              <span className="font-bold text-indigo-900 dark:text-indigo-200 block mt-1">Chatbot Final</span>
-              <span className="text-[10px] text-indigo-700 dark:text-indigo-400 block mt-0.5 font-sans">Dialogue avec les 4 moteurs</span>
+              <span className="font-bold text-emerald-900 dark:text-emerald-200 block mt-1">RAG & Chatbot</span>
+              <span className="text-[10px] text-emerald-700 dark:text-emerald-400 block mt-0.5 font-sans">Documents & Dialogue</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Navigation Map Guide */}
+      {/* 1) Encadré bien visible sur la nature du modèle */}
+      <ModelNatureDisclaimer defaultExpanded={true} />
+
+      {/* 5) Indicateur de progression des 5 étapes (cases cochées) */}
+      <ProgressTrackerCard
+        completedStepNumbers={completedStepNumbers}
+        onNavigate={onNavigate}
+        onResetProgress={onResetProgress}
+      />
+
+      {/* Navigation Map Guide - 4 Menu Sections */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 transition-colors duration-200">
         <div className="flex items-center gap-2 mb-4">
           <Layers className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
           <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-            Organisation du Site & Barre de Navigation
+            Organisation du Menu en 4 Sections & Liens avec les 5 Étapes
           </h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
           <div className="p-3.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-slate-900 dark:text-slate-100">1. Modèle Base</span>
-              <span className="text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-1.5 py-0.5 rounded font-mono">4 vues</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">1. Modèle de Base</span>
+              <span className="text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 px-1.5 py-0.5 rounded font-mono">Étapes 1, 2, 3</span>
             </div>
             <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
-              Comprend 4 sous-onglets : <strong>Données & Tokens</strong> (corpus et vocabulaire), <strong>Mon Modèle</strong> (architecture & projection 2D), <strong>Poids & Matrice</strong> (probabilités) et <strong>Inférence & Softmax</strong> (génération).
+              Comprend : <strong>1. Données & Tokens</strong> (corpus et vocabulaire), <strong>Mon Modèle</strong> (projection 2D), <strong>2. Poids & Matrice</strong> (probabilités) et <strong>3. Inférence & Softmax</strong> (génération mot à mot).
             </p>
             <button
               onClick={() => onNavigate('donnees')}
@@ -318,10 +366,10 @@ export const UserGuideSection: React.FC<UserGuideSectionProps> = ({ onNavigate }
           <div className="p-3.5 rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/30 space-y-2">
             <div className="flex items-center justify-between">
               <span className="font-bold text-purple-900 dark:text-purple-200">2. Alignement & RL</span>
-              <span className="text-[10px] bg-purple-200 dark:bg-purple-900/80 text-purple-800 dark:text-purple-200 px-1.5 py-0.5 rounded font-mono">2 phases</span>
+              <span className="text-[10px] bg-purple-200 dark:bg-purple-900/80 text-purple-800 dark:text-purple-200 px-1.5 py-0.5 rounded font-mono">Étape 4</span>
             </div>
             <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
-              Comprend 2 phases complémentaires : <strong>Phase 1 : Fine-Tuning (SFT)</strong> pour spécialiser le modèle sur des Q/R, et <strong>Phase 2 : Renforcement (RLHF)</strong> pour injecter des valeurs de sécurité et éliminer les dérives.
+              Comprend 2 phases complémentaires : <strong>4. Fine-Tuning (SFT)</strong> pour spécialiser le modèle sur des Q/R, et <strong>4. Renforcement (RLHF/DPO)</strong> pour injecter des valeurs de sécurité et atténuer fortement les dérives sous contrainte KL.
             </p>
             <button
               onClick={() => onNavigate('finetune')}
@@ -334,43 +382,49 @@ export const UserGuideSection: React.FC<UserGuideSectionProps> = ({ onNavigate }
 
           <div className="p-3.5 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50/30 dark:bg-emerald-950/30 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-emerald-900 dark:text-emerald-200">3. RAG Simple</span>
-              <span className="text-[10px] bg-emerald-200 dark:bg-emerald-900/80 text-emerald-800 dark:text-emerald-200 px-1.5 py-0.5 rounded font-mono">Sans ré-entraînement</span>
+              <span className="font-bold text-emerald-900 dark:text-emerald-200">3. Applications & RAG</span>
+              <span className="text-[10px] bg-emerald-200 dark:bg-emerald-900/80 text-emerald-800 dark:text-emerald-200 px-1.5 py-0.5 rounded font-mono">Étape 5</span>
             </div>
             <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
-              Chargez un document texte pur (.txt) ou saisissez des informations privées. Le modèle recherche l'extrait le plus pertinent et répond avec une certitude absolue sans toucher à ses poids.
+              Chargez un document texte pur (.txt). Le modèle recherche l'extrait le plus pertinent et répond en réduisant fortement les hallucinations. Testez ensuite le dialogue dans le <strong>Chatbot Multi-Moteurs</strong>.
             </p>
             <button
               onClick={() => onNavigate('rag')}
               className="text-emerald-700 dark:text-emerald-300 hover:text-emerald-900 dark:hover:text-emerald-100 font-semibold inline-flex items-center gap-1 cursor-pointer pt-1"
             >
-              <span>Accéder au RAG Simple</span>
+              <span>Accéder au RAG & Chatbot</span>
               <ArrowRight className="w-3 h-3" />
             </button>
           </div>
 
-          <div className="p-3.5 rounded-lg border border-indigo-200 dark:border-indigo-800 bg-indigo-50/30 dark:bg-indigo-950/30 space-y-2">
+          <div className="p-3.5 rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/30 space-y-2">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-indigo-900 dark:text-indigo-200">4. Chatbot & Code</span>
-              <span className="text-[10px] bg-indigo-200 dark:bg-indigo-900/80 text-indigo-800 dark:text-indigo-200 px-1.5 py-0.5 rounded font-mono">Dialogue & Carto</span>
+              <span className="font-bold text-amber-900 dark:text-amber-200">4. Ressources & Guides</span>
+              <span className="text-[10px] bg-amber-200 dark:bg-amber-900/80 text-amber-800 dark:text-amber-200 px-1.5 py-0.5 rounded font-mono">Documentation</span>
             </div>
             <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
-              Le <strong>Chatbot</strong> permet de discuter en basculant en 1 clic entre les 4 moteurs. Le bouton <strong>Code & Fonctions (&lt;/&gt;)</strong> détaille les fonctions TypeScript utilisées à chaque niveau.
+              Consultez les <strong>0. Prérequis</strong> pour réviser les notions clés, explorez le <strong>Glossaire Technique</strong> avec recherche instantanée, ou inspectez le <strong>Code & Fonctions</strong> TypeScript.
             </p>
-            <div className="flex items-center gap-3 pt-1">
+            <div className="flex items-center gap-2 pt-1">
               <button
-                onClick={() => onNavigate('chat')}
-                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-semibold inline-flex items-center gap-1 cursor-pointer"
+                onClick={() => onNavigate('prerequisites')}
+                className="text-indigo-600 dark:text-indigo-400 hover:underline font-semibold text-[11px] cursor-pointer"
               >
-                <span>Chatbot</span>
-                <ArrowRight className="w-3 h-3" />
+                Prérequis
               </button>
+              <span className="text-slate-300">·</span>
+              <button
+                onClick={() => onNavigate('glossary')}
+                className="text-emerald-600 dark:text-emerald-400 hover:underline font-semibold text-[11px] cursor-pointer"
+              >
+                Glossaire
+              </button>
+              <span className="text-slate-300">·</span>
               <button
                 onClick={() => onNavigate('guide')}
-                className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-semibold inline-flex items-center gap-1 cursor-pointer"
+                className="text-amber-600 dark:text-amber-400 hover:underline font-semibold text-[11px] cursor-pointer"
               >
-                <span>Code & Fonctions</span>
-                <ArrowRight className="w-3 h-3" />
+                Code
               </button>
             </div>
           </div>
@@ -432,7 +486,7 @@ export const UserGuideSection: React.FC<UserGuideSectionProps> = ({ onNavigate }
                       <div className="flex flex-wrap gap-1">
                         {step.subTabs.map(sub => (
                           <button
-                            key={sub.key}
+                            key={`${step.number}-${sub.label}`}
                             onClick={() => onNavigate(sub.key)}
                             className="text-[10px] bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded transition-colors cursor-pointer"
                           >
@@ -522,7 +576,7 @@ export const UserGuideSection: React.FC<UserGuideSectionProps> = ({ onNavigate }
               <span>4. Résultat Concret</span>
             </div>
             <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-[11px]">
-              À la génération, les probabilités des mots toxiques (ex: <em>empoisonnee</em>) tombent vers 0%, tandis que les recommandations saines prennent 100% de la distribution sans perdre la fluidité du français.
+              À la génération, cette simulation pédagogique montre comment les probabilités des mots toxiques (ex: <em>empoisonnee</em>) sont fortement réduites par le gradient, favorisant les réponses bienveillantes.
             </p>
           </div>
         </div>
@@ -598,10 +652,10 @@ export const UserGuideSection: React.FC<UserGuideSectionProps> = ({ onNavigate }
           <div className="p-3.5 bg-slate-800/90 rounded-lg border border-slate-700 space-y-2 flex flex-col justify-between">
             <div className="space-y-1.5">
               <span className="text-xs font-bold text-rose-300 block">
-                D. Éliminer le Poison (RLHF)
+                D. Atténuer le Poison (RLHF)
               </span>
               <p className="text-[11px] text-slate-300 leading-relaxed">
-                Dans <strong>Alignement (Phase 2)</strong>, votez 👍 sur la nourriture saine et 👎 sur le poison. Appliquez le RLHF : le poison disparaît totalement !
+                Dans <strong>Alignement (Phase 2)</strong>, votez 👍 sur la nourriture saine et 👎 sur le poison. Appliquez le RLHF : la simulation montre comment la probabilité du mot toxique est drastiquement atténuée.
               </p>
             </div>
             <button
@@ -751,7 +805,7 @@ export const UserGuideSection: React.FC<UserGuideSectionProps> = ({ onNavigate }
           <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800 space-y-1">
             <span className="font-bold text-slate-800 dark:text-slate-200 block">RAG (Retrieval-Augmented)</span>
             <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed">
-              Extraction du passage pertinent d'un document brut directement injecté dans le prompt pour sourcer les réponses sans hallucination.
+              Extraction du passage pertinent d'un document brut directement injecté dans le prompt pour sourcer les réponses et réduire fortement les hallucinations.
             </p>
           </div>
 

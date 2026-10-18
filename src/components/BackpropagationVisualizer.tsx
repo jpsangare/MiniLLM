@@ -87,10 +87,9 @@ export const BackpropagationVisualizer: React.FC<BackpropagationVisualizerProps>
     return displayCandidates.map(c => {
       const y = c.id === targetCandidate.id ? 1.0 : 0.0;
       const gradient = Number((c.probability - y).toFixed(4));
-      // In SGD update: deltaLogit = - learningRate * gradient
-      // We scale slightly (x 4) for high-impact educational visual feedback in 1 single step
-      const deltaLogit = Number((-learningRate * gradient * 4).toFixed(3));
-      const updatedLogit = Number((c.rawLogit + deltaLogit).toFixed(2));
+      // In SGD update: deltaLogit = - learningRate * gradient (exact formula without arbitrary scaling)
+      const deltaLogit = Number((-learningRate * gradient).toFixed(4));
+      const updatedLogit = Number((c.rawLogit + deltaLogit).toFixed(4));
 
       return {
         ...c,
@@ -515,7 +514,7 @@ export const BackpropagationVisualizer: React.FC<BackpropagationVisualizerProps>
             </div>
 
             <div className="p-2 bg-emerald-50/60 rounded border border-emerald-200 text-[10px] text-emerald-900 font-mono text-center">
-              ΔW = -{learningRate} × ({targetAfter?.gradient}) &gt; 0
+              ΔLogit = -η · ∇ = -{learningRate} × ({targetAfter?.gradient}) = {targetAfter && targetAfter.deltaLogit > 0 ? `+${targetAfter.deltaLogit}` : targetAfter?.deltaLogit}
             </div>
           </div>
         )}

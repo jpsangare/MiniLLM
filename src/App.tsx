@@ -15,6 +15,8 @@ import { FineTuningSection } from './components/FineTuningSection';
 import { RagSection } from './components/RagSection';
 import { ChatbotSection } from './components/ChatbotSection';
 import { UserGuideSection } from './components/UserGuideSection';
+import { PrerequisitesSection } from './components/PrerequisitesSection';
+import { GlossarySection } from './components/GlossarySection';
 import { QuizSection } from './components/QuizSection';
 import { ReinforcementSection } from './components/ReinforcementSection';
 import { PREDEFINED_DATASETS, getDefaultDatasetForLanguage } from './data/defaultDatasets';
@@ -126,6 +128,50 @@ export default function App() {
     setActiveTab('userguide');
   }, [language]);
 
+  // Track visited tabs / steps for the 5-step progress indicator
+  const [visitedTabs, setVisitedTabs] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem('minillm_visited_tabs');
+      return stored ? JSON.parse(stored) : ['userguide'];
+    } catch {
+      return ['userguide'];
+    }
+  });
+
+  useEffect(() => {
+    setVisitedTabs((prev) => {
+      if (!prev.includes(activeTab)) {
+        const next = [...prev, activeTab];
+        try {
+          localStorage.setItem('minillm_visited_tabs', JSON.stringify(next));
+        } catch {
+          // ignore
+        }
+        return next;
+      }
+      return prev;
+    });
+  }, [activeTab]);
+
+  const completedStepNumbers = useMemo(() => {
+    const stepNums: number[] = [];
+    if (visitedTabs.includes('donnees')) stepNums.push(1);
+    if (visitedTabs.includes('matrice') || visitedTabs.includes('modele')) stepNums.push(2);
+    if (visitedTabs.includes('generation')) stepNums.push(3);
+    if (visitedTabs.includes('finetune') || visitedTabs.includes('rlhf')) stepNums.push(4);
+    if (visitedTabs.includes('rag') || visitedTabs.includes('chat')) stepNums.push(5);
+    return stepNums;
+  }, [visitedTabs]);
+
+  const handleResetProgress = useCallback(() => {
+    setVisitedTabs(['userguide']);
+    try {
+      localStorage.removeItem('minillm_visited_tabs');
+    } catch {
+      // ignore
+    }
+  }, []);
+
   const totalTokensCount = useMemo(() => {
     return sentences.reduce((acc, s) => acc + s.length, 0);
   }, [sentences]);
@@ -160,6 +206,7 @@ export default function App() {
           onToggleSidebar={() => setIsSidebarCollapsed((prev) => !prev)}
           onOpenMobileSidebar={() => setIsMobileOpen(true)}
           isSidebarCollapsed={isSidebarCollapsed}
+          completedStepNumbers={completedStepNumbers}
         />
 
         {/* Main Content Container */}
@@ -236,9 +283,21 @@ export default function App() {
           </div>
         )}
 
-        {/* 0. User Guide & Dedicated Quiz */}
+        {/* 0. User Guide & Foundations */}
         {activeTab === 'userguide' && (
-          <UserGuideSection onNavigate={setActiveTab} />
+          <UserGuideSection
+            onNavigate={setActiveTab}
+            completedStepNumbers={completedStepNumbers}
+            onResetProgress={handleResetProgress}
+          />
+        )}
+
+        {activeTab === 'prerequisites' && (
+          <PrerequisitesSection onNavigate={setActiveTab} />
+        )}
+
+        {activeTab === 'glossary' && (
+          <GlossarySection onNavigate={setActiveTab} />
         )}
 
         {activeTab === 'quiz' && (
@@ -376,8 +435,20 @@ export default function App() {
               {t('footer.guide')}
             </button>
             <button
-              onClick={() => setActiveTab('quiz')}
+              onClick={() => setActiveTab('prerequisites')}
+              className="hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer text-indigo-600 dark:text-indigo-400 font-medium"
+            >
+              {t('nav.prerequisites')}
+            </button>
+            <button
+              onClick={() => setActiveTab('glossary')}
               className="hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer text-emerald-600 dark:text-emerald-400 font-medium"
+            >
+              {t('nav.glossary')}
+            </button>
+            <button
+              onClick={() => setActiveTab('quiz')}
+              className="hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer font-medium"
             >
               {t('footer.quiz')}
             </button>

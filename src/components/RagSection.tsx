@@ -157,7 +157,7 @@ export const RagSection: React.FC<RagSectionProps> = ({
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
               <span>Ancré dans la source</span>
             </span>
-            <span className="text-[10px] text-slate-400 block mt-0.5">Élimine les hallucinations</span>
+            <span className="text-[10px] text-slate-400 block mt-0.5">Réduit les hallucinations</span>
           </div>
         </div>
       </div>
@@ -315,7 +315,7 @@ export const RagSection: React.FC<RagSectionProps> = ({
           {/* Comparison : Without RAG vs With RAG */}
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
             <h2 className="text-sm font-semibold text-slate-900">
-              Résultat : Sans RAG (Hallucination) vs Avec RAG (Vérifié)
+              Résultat : Sans RAG (Risque d'hallucination) vs Avec RAG (Ancrage documentaire)
             </h2>
 
             <div className="space-y-3">
@@ -324,7 +324,7 @@ export const RagSection: React.FC<RagSectionProps> = ({
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-rose-900 flex items-center gap-1.5">
                     <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
-                    <span>Sans RAG (Mémoire brute du modèle)</span>
+                    <span>Sans RAG (Mémoire statistique du modèle seul)</span>
                   </span>
                   <span className="text-[10px] text-rose-600 font-mono">Non informé</span>
                 </div>
@@ -336,7 +336,7 @@ export const RagSection: React.FC<RagSectionProps> = ({
                   </span>
                 </div>
                 <p className="text-[11px] text-rose-700">
-                  Le document n'étant pas dans ses données d'entraînement de base, le modèle invente ou dévie complètement du sujet.
+                  Le document n'étant pas dans ses données d'entraînement de base, le modèle tente une complétion statistique et risque d'inventer des faits inexistants.
                 </p>
               </div>
 
@@ -347,7 +347,7 @@ export const RagSection: React.FC<RagSectionProps> = ({
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                     <span>Avec RAG (Extrait injecté dans le contexte)</span>
                   </span>
-                  <span className="text-[10px] text-emerald-700 font-mono">100% Ancré</span>
+                  <span className="text-[10px] text-emerald-700 font-mono">Fortement Ancré</span>
                 </div>
 
                 <div className="bg-white p-2.5 rounded border border-emerald-200 font-mono text-xs text-emerald-950 min-h-10">
@@ -357,7 +357,7 @@ export const RagSection: React.FC<RagSectionProps> = ({
                   </span>
                 </div>
                 <p className="text-[11px] text-emerald-800">
-                  La réponse provient directement de la source récupérée (Chunk #{bestChunk?.id}). Zéro risque d'hallucination !
+                  La réponse provient directement de la source récupérée (Chunk #{bestChunk?.id}). Le RAG réduit fortement les hallucinations en fournissant le texte de référence dans le prompt.
                 </p>
               </div>
             </div>

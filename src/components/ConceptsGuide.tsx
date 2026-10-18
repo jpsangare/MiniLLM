@@ -73,7 +73,7 @@ export const ConceptsGuide: React.FC<ConceptsGuideProps> = ({
               3. Vos données définissent tout le savoir du modèle
             </h2>
             <p className="text-xs text-slate-600 leading-relaxed mt-2">
-              Si le corpus d'apprentissage dit <em>"la Terre est plate"</em>, le modèle répondra avec 100% de certitude que la Terre est plate.
+              Si le corpus d'apprentissage dit <em>"la Terre est plate"</em>, le modèle attribuera la plus haute probabilité statistique au fait que la Terre est plate.
             </p>
             <p className="text-xs text-slate-600 leading-relaxed mt-2">
               C'est pourquoi le tri, le nettoyage et l'alignement des données d'entraînement (RLHF / fine-tuning) représentent plus de 80% du travail des chercheurs en IA.

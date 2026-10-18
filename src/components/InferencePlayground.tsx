@@ -695,9 +695,17 @@ export const InferencePlayground: React.FC<InferencePlaygroundProps> = ({
               </div>
             </div>
 
-            {/* Attention Head Selector */}
+            {/* Note pédagogique sur la nature illustrative de la carte */}
+            <div className="p-2.5 bg-amber-50/80 border border-amber-200/80 rounded-lg text-xs text-amber-900 flex items-start gap-2">
+              <Info className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+              <p className="text-[11px] leading-relaxed">
+                <strong>Note didactique :</strong> Cette carte est une visualisation pédagogique simulant l'influence du contexte sur les prédictions, et non le calcul matriciel de self-attention multi-têtes d'un véritable Transformer.
+              </p>
+            </div>
+
+            {/* Illustrative Views Selector */}
             <div className="flex flex-wrap items-center gap-2 text-xs pt-1">
-              <span className="text-[11px] text-slate-500 font-medium">Tête d'attention :</span>
+              <span className="text-[11px] text-slate-500 font-medium">Vues illustratives :</span>
               <button
                 onClick={() => setActiveAttentionHead('global')}
                 className={`px-2.5 py-1 rounded-lg border transition-colors cursor-pointer text-xs ${
@@ -706,7 +714,7 @@ export const InferencePlayground: React.FC<InferencePlaygroundProps> = ({
                     : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                🧠 Synthèse Globale (Multi-Tête)
+                🧠 Vue illustrative : influence estimée du contexte
               </button>
               <button
                 onClick={() => setActiveAttentionHead('syntax')}
@@ -716,7 +724,7 @@ export const InferencePlayground: React.FC<InferencePlaygroundProps> = ({
                     : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                🎯 Tête 1 : Syntaxe & Contexte Immédiat
+                🎯 Vue 1 : Syntaxe & Contexte Immédiat
               </button>
               <button
                 onClick={() => setActiveAttentionHead('semantic')}
@@ -726,7 +734,7 @@ export const InferencePlayground: React.FC<InferencePlaygroundProps> = ({
                     : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
                 }`}
               >
-                🦊 Tête 2 : Sémantique Sujet-Verbe
+                🦊 Vue 2 : Sémantique Sujet-Verbe
               </button>
             </div>
 
@@ -735,10 +743,10 @@ export const InferencePlayground: React.FC<InferencePlaygroundProps> = ({
               <div className="p-3.5 bg-purple-50/70 rounded-lg border border-purple-100 text-xs text-slate-700 space-y-2 leading-relaxed">
                 <div className="font-semibold text-purple-900 flex items-center gap-1.5">
                   <Sparkles className="w-3.5 h-3.5 text-purple-600" />
-                  <span>Comment fonctionne l'Attention dans les Transformers ?</span>
+                  <span>Comment fonctionne l'Attention dans les véritables Transformers ?</span>
                 </div>
                 <p className="text-[11px]">
-                  Dans un Transformer (comme GPT, Gemini ou notre modèle), chaque mot ne regarde pas uniquement son voisin direct. Il compare ce qu'il cherche (<strong>Query</strong>) avec tous les mots précédents (<strong>Keys</strong>) pour calculer des poids d'attention normalisés via Softmax (somme = 100%).
+                  Dans un vrai Transformer (comme GPT ou Gemini), chaque mot ne regarde pas uniquement son voisin direct. Il compare ce qu'il cherche (<strong>Query</strong>) avec tous les mots précédents (<strong>Keys</strong>) pour calculer des poids d'attention normalisés via Softmax (somme = 100%).
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-[11px]">
                   <div className="p-2 bg-white rounded border border-purple-100">
@@ -1094,7 +1102,7 @@ export const InferencePlayground: React.FC<InferencePlaygroundProps> = ({
                   La <strong>Perplexité (PPL = exp(Loss))</strong> est l'indicateur standard de référence pour évaluer un LLM. Elle quantifie le degré de "surprise" du modèle face au texte :
                 </p>
                 <ul className="text-[11px] space-y-1 list-disc list-inside text-slate-600">
-                  <li><strong>PPL = 1.0</strong> : Certitude absolue (aucune hésitation, prédiction parfaite).</li>
+                  <li><strong>PPL = 1.0</strong> : Confiance maximale (aucune hésitation, prédiction univoque sur les données).</li>
                   <li><strong>PPL = 2.0</strong> : Le modèle hésite à parts égales entre 2 mots possibles.</li>
                   <li><strong>Plus la valeur est basse</strong>, plus la phrase est fluide, logique et maîtrisée par le modèle.</li>
                   <li><strong>Lien avec la Température</strong> : Monter le curseur de température aplatit les probabilités et fait grimper la perplexité en direct.</li>
