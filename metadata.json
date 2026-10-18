@@ -1,0 +1,6 @@
+{
+  "name": "MiniLLM - Comprendre les LLM",
+  "description": "Application pédagogique interactive pour comprendre le fonctionnement d'un modèle de langage (LLM) : données d'entraînement, tokenisation, calcul des poids et génération pas à pas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
