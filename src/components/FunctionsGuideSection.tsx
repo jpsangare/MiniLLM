@@ -191,6 +191,14 @@ export const FunctionsGuideSection: React.FC<FunctionsGuideSectionProps> = ({
           input: 'Tokens actuels + Fenêtre + Tête d\'attention + Candidat survolé',
           output: 'Poids d\'attention normalisés (%) et matrice Query × Key',
         },
+        {
+          name: 'computeGradientsAndBackprop(...)',
+          file: 'src/components/BackpropagationVisualizer.tsx',
+          signature: '(candidates, targetId, learningRate) => { gradients, updatedLogits, newLoss }',
+          role: 'Simule la rétropropagation : calcule les gradients ∂Loss/∂z = p - y, applique la descente SGD (W ← W - η∇) et mesure le gain d\'apprentissage.',
+          input: 'Candidats Softmax + Token cible réel + Taux d\'apprentissage η',
+          output: 'Gradients individuels, mise à jour des logits et comparaison de probabilités',
+        },
       ],
     },
     {

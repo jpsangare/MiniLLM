@@ -6,16 +6,18 @@ Application pédagogique interactive et visuelle pour explorer, expérimenter et
 
 ## 🌟 Fonctionnalités Principales
 
-### 0. Guide & Laboratoire Didactique
+### 0. Guide, Navigation & Laboratoire Didactique
+- **Mode Sombre Global (Dark Mode)** : Bouton de bascule instantané disponible dans le header supérieur et en bas de la barre latérale rétractable, offrant un thème sombre soigné avec contraste optimisé pour réduire la fatigue oculaire et s'adapter aux préférences de l'utilisateur (avec persistance automatique dans le stockage local).
+- **Bande latérale rétractable** : Menu de navigation à gauche rétractable/dépliable en un clic (icône ou raccourci) pour optimiser l'espace de travail sur toutes les tailles d'écran (avec support tiroir mobile).
 - **Parcours guidé étape par étape** pour découvrir le cycle de vie d'un modèle d'IA générative.
-- **5 Mini-expériences interactives** (influence de la température, injection de faits dans le corpus, comparaison SFT vs Base, élimination de toxicité en RLHF, ancrage documentaire RAG).
+- **Grand Quiz des Connaissances LLM (Page Dédiée)** : Page dédiée accessible depuis la barre latérale et le pied de page, proposant une évaluation interactive complète à choix multiples couvrant l'intégralité du pipeline (Tokenisation, Poids & Matrices, Softmax & Perplexité, Attention Maps, Rétropropagation & Gradients, SFT, RLHF, RAG), avec feedback didactique instantané, filtre par thématique, calcul du rang de maîtrise et passerelles directes vers les simulateurs pratiques.
 - **Foire Aux Questions (FAQ)** répondant aux questions clés (hallucinations, différence entre SFT et RLHF, divergence KL, confidentialité 100% locale).
 
 ### 1. Modèle de Base (Pré-entraînement Fondamental)
 - **Données & Tokens** : Découpage du texte brut en tokens avec identifiants numériques (`Token IDs`), gestion des tokens spéciaux (`<START>`, `<END>`), statistiques de fréquence et édition libre du corpus.
 - **Mon Modèle** : Projection sémantique 2D des tokens (*Embeddings 2D* interactifs), exploration des clusters grammaticaux, et export complet de l'architecture en JSON et script Python autonome.
 - **Poids & Matrice** : Visualisation de la matrice de transition conditionnelle $P(\text{mot suivant} \mid \text{contexte})$, calcul de la perte (*Loss*), réglage de la fenêtre de contexte (Bigramme / Trigramme), et **exportation téléchargeable des poids du modèle au format JSON** (checkpoint standard avec modale d'inspection).
-- **Inférence & Softmax** : Génération mot à mot avec contrôle de température ($\tau$), **indicateur de Perplexité ($PPL = \exp(\text{Loss})$) en temps réel**, et **visualisation des cartes d'attention (*Attention Maps*)** sous forme de faisceaux d'influence linéaires et de matrice causale autorégressive 2D ($Q \times K$).
+- **Inférence & Softmax** : Génération mot à mot avec contrôle de température ($\tau$), **mode « Auto-play » avec mise à jour en direct de l'invite de commande pour visualiser le déroulé de la phrase**, **indicateur de Perplexité ($PPL = \exp(\text{Loss})$) en temps réel**, **cartes d'attention (*Attention Maps*)**, et **visualisation didactique du calcul des gradients et de la rétropropagation (Backpropagation / SGD)** pour comprendre la mise à jour des poids lors de l'entraînement.
 
 ### 2. Fine-Tuning Supervisé (SFT)
 - Alignement du modèle de complétion brute vers un format d'assistant conversationnel structuré (« Question ➔ Réponse »).

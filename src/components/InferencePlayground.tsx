@@ -25,7 +25,10 @@ import {
   Eye,
   Network,
   Grid,
+  Workflow,
+  Check,
 } from 'lucide-react';
+import { BackpropagationVisualizer } from './BackpropagationVisualizer';
 
 interface InferencePlaygroundProps {
   model: ModelWeights;
@@ -41,12 +44,20 @@ export const InferencePlayground: React.FC<InferencePlaygroundProps> = ({
   initialPrompt = 'le renard',
 }) => {
   const [promptText, setPromptText] = useState(initialPrompt);
+  const [initialSeedPrompt, setInitialSeedPrompt] = useState(initialPrompt);
   const [temperature, setTemperature] = useState<number>(0.8);
-  const [generatedTokens, setGeneratedTokens] = useState<Token[]>([]);
+  const [hasEnded, setHasEnded] = useState(false);
   const [stepsHistory, setStepsHistory] = useState<GenerationStep[]>([]);
-  const [isAutoGenerating, setIsAutoGenerating] = useState(false);
   const [lastSampledCandidate, setLastSampledCandidate] = useState<NextTokenCandidate | null>(null);
+  const [lastGeneratedWord, setLastGeneratedWord] = useState<string | null>(null);
   const [showPplExplanation, setShowPplExplanation] = useState(false);
+
+  // Auto-play state
+  const [isAutoPlaying, setIsAutoPlaying] = useState<boolean>(false);
+  const [autoPlaySpeed, setAutoPlaySpeed] = useState<number>(700);
+  const [autoPlayMaxTokens, setAutoPlayMaxTokens] = useState<number>(5);
+  const [autoPlayStepCount, setAutoPlayStepCount] = useState<number>(0);
+  const [autoPlayStatusMessage, setAutoPlayStatusMessage] = useState<string | null>(null);
 
   // Attention Map State
   const [activeAttentionHead, setActiveAttentionHead] = useState<'global' | 'syntax' | 'semantic'>('global');
@@ -55,13 +66,26 @@ export const InferencePlayground: React.FC<InferencePlaygroundProps> = ({
   const [hoveredMatrixCell, setHoveredMatrixCell] = useState<{ query: string; key: string; weight: number } | null>(null);
   const [showAttentionExplainer, setShowAttentionExplainer] = useState<boolean>(false);
 
-  const autoGenTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Encode current prompt tokens
+  const baseTokens = React.useMemo(() => {
+    return encodePrompt(promptText, vocabulary);
+  }, [promptText, vocabulary]);
 
-  // Encode current full sentence (initial prompt + generated tokens)
+  // Current tokens representing the full sequence
   const currentTokens = React.useMemo(() => {
-    const base = encodePrompt(promptText, vocabulary);
-    return [...base, ...generatedTokens];
-  }, [promptText, generatedTokens, vocabulary]);
+    if (hasEnded) {
+      return [
+        ...baseTokens,
+        { id: vocabulary.endTokenId, text: END_TOKEN, isSpecial: true },
+      ];
+    }
+    return baseTokens;
+  }, [baseTokens, hasEnded, vocabulary.endTokenId]);
+
+  // Number of tokens originally from the initial seed
+  const seedTokensCount = React.useMemo(() => {
+    return encodePrompt(initialSeedPrompt, vocabulary).length;
+  }, [initialSeedPrompt, vocabulary]);
 
   // Predict next token candidates based on current context
   const { candidates, activeContextTokens } = React.useMemo(() => {
@@ -84,16 +108,20 @@ export const InferencePlayground: React.FC<InferencePlaygroundProps> = ({
     );
   }, [currentTokens, contextWindow, activeAttentionHead, hoveredCandidateText]);
 
-  // Check if reached end token
-  const hasEnded = generatedTokens.length > 0 &&
-    generatedTokens[generatedTokens.length - 1].text === END_TOKEN;
-
-  // Single step generation
-  const handleGenerateNextToken = () => {
-    if (candidates.length === 0 || hasEnded) return;
+  // Single step generation with direct prompt synchronization
+  const handleGenerateStep = (fromAutoPlay = false): boolean => {
+    if (candidates.length === 0 || hasEnded) {
+      if (fromAutoPlay) {
+        setIsAutoPlaying(false);
+      }
+      return false;
+    }
 
     const { chosen, randomSample } = sampleCandidate(candidates, temperature);
     setLastSampledCandidate(chosen);
+
+    const chosenProb = chosen.probability;
+    const stepPerplexity = chosenProb > 0 ? Math.exp(-Math.log(Math.max(chosenProb, 0.0001))) : 99;
 
     const newToken: Token = {
       id: chosen.id,
@@ -101,11 +129,8 @@ export const InferencePlayground: React.FC<InferencePlaygroundProps> = ({
       isSpecial: chosen.text === END_TOKEN,
     };
 
-    const chosenProb = chosen.probability;
-    const stepPerplexity = chosenProb > 0 ? Math.exp(-Math.log(Math.max(chosenProb, 0.0001))) : 99;
-
     const newStep: GenerationStep = {
-      stepIndex: generatedTokens.length + 1,
+      stepIndex: stepsHistory.length + 1,
       contextTokens: [...activeContextTokens],
       candidates: [...candidates],
       chosenToken: newToken,
@@ -115,42 +140,108 @@ export const InferencePlayground: React.FC<InferencePlaygroundProps> = ({
       stepPerplexity: Number(stepPerplexity.toFixed(2)),
     };
 
-    setGeneratedTokens(prev => [...prev, newToken]);
     setStepsHistory(prev => [...prev, newStep]);
+    setLastGeneratedWord(chosen.text);
 
-    if (newToken.text === END_TOKEN) {
-      setIsAutoGenerating(false);
+    if (chosen.text === END_TOKEN) {
+      setHasEnded(true);
+      if (fromAutoPlay) {
+        setIsAutoPlaying(false);
+        setAutoPlayStatusMessage('Fin de phrase atteinte (<FIN>)');
+      }
+      return false;
+    } else {
+      const isPunctuation = /^[.,!?;:]$/.test(chosen.text);
+      const trimmed = promptText.trim();
+      const updatedPrompt = trimmed === ''
+        ? chosen.text
+        : isPunctuation
+        ? `${trimmed}${chosen.text}`
+        : `${trimmed} ${chosen.text}`;
+
+      setPromptText(updatedPrompt);
+      return true;
     }
+  };
+
+  const handleStartAutoPlay = () => {
+    if (hasEnded) {
+      // Recommencer à partir du prompt initial
+      setPromptText(initialSeedPrompt);
+      setHasEnded(false);
+      setStepsHistory([]);
+      setAutoPlayStepCount(0);
+      setAutoPlayStatusMessage(`Auto-play relancé (${autoPlayMaxTokens} tokens)...`);
+      setIsAutoPlaying(true);
+      return;
+    }
+
+    setAutoPlayStepCount(0);
+    setAutoPlayStatusMessage(`Auto-play lancé (${autoPlayMaxTokens} tokens consécutifs)...`);
+    setIsAutoPlaying(true);
+  };
+
+  const handleStopAutoPlay = () => {
+    setIsAutoPlaying(false);
+    setAutoPlayStatusMessage('Auto-play arrêté.');
   };
 
   // Auto-generation loop
   useEffect(() => {
-    if (isAutoGenerating && !hasEnded && generatedTokens.length < 20) {
-      autoGenTimerRef.current = setTimeout(() => {
-        handleGenerateNextToken();
-      }, 650);
-    } else {
-      setIsAutoGenerating(false);
+    if (!isAutoPlaying) return;
+
+    if (hasEnded || candidates.length === 0) {
+      setIsAutoPlaying(false);
+      return;
     }
 
-    return () => {
-      if (autoGenTimerRef.current) {
-        clearTimeout(autoGenTimerRef.current);
-      }
-    };
-  }, [isAutoGenerating, generatedTokens.length, hasEnded]);
+    if (autoPlayMaxTokens !== -1 && autoPlayStepCount >= autoPlayMaxTokens) {
+      setIsAutoPlaying(false);
+      setAutoPlayStatusMessage(`✓ Séquence de ${autoPlayStepCount} tokens consécutifs générée avec succès.`);
+      return;
+    }
 
-  const handleResetGeneration = () => {
-    setIsAutoGenerating(false);
-    setGeneratedTokens([]);
+    const timer = setTimeout(() => {
+      const continued = handleGenerateStep(true);
+      if (continued) {
+        setAutoPlayStepCount(prev => prev + 1);
+      }
+    }, autoPlaySpeed);
+
+    return () => clearTimeout(timer);
+  }, [
+    isAutoPlaying,
+    autoPlayStepCount,
+    autoPlayMaxTokens,
+    autoPlaySpeed,
+    hasEnded,
+    candidates,
+    promptText,
+  ]);
+
+  const handleResetToSeed = () => {
+    setIsAutoPlaying(false);
+    setPromptText(initialSeedPrompt);
+    setHasEnded(false);
     setStepsHistory([]);
     setLastSampledCandidate(null);
+    setLastGeneratedWord(null);
     setHoveredCandidateText(null);
+    setAutoPlayStepCount(0);
+    setAutoPlayStatusMessage(null);
   };
 
   const handleApplyPresetPrompt = (text: string) => {
-    handleResetGeneration();
+    setIsAutoPlaying(false);
     setPromptText(text);
+    setInitialSeedPrompt(text);
+    setHasEnded(false);
+    setStepsHistory([]);
+    setLastSampledCandidate(null);
+    setLastGeneratedWord(null);
+    setHoveredCandidateText(null);
+    setAutoPlayStepCount(0);
+    setAutoPlayStatusMessage(null);
   };
 
   // Instantaneous context perplexity (branching factor / entropy of next token candidates)
@@ -194,15 +285,15 @@ export const InferencePlayground: React.FC<InferencePlaygroundProps> = ({
     if (ppl === null) {
       return {
         label: 'En attente',
-        color: 'text-slate-500 bg-slate-100 border-slate-200',
-        barColor: 'bg-slate-300',
+        color: 'text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700',
+        barColor: 'bg-slate-300 dark:bg-slate-600',
         desc: 'Saisissez un prompt ou lancez la génération.',
       };
     }
     if (ppl <= 1.5) {
       return {
         label: 'Excellente Certitude',
-        color: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+        color: 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800',
         barColor: 'bg-emerald-500',
         desc: 'Le modèle est très sûr de sa trajectoire (faible perplexité).',
       };
@@ -210,14 +301,14 @@ export const InferencePlayground: React.FC<InferencePlaygroundProps> = ({
     if (ppl <= 3.5) {
       return {
         label: 'Incertitude Modérée',
-        color: 'text-amber-700 bg-amber-50 border-amber-200',
+        color: 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800',
         barColor: 'bg-amber-500',
         desc: 'Hésitation équilibrée entre plusieurs suites plausibles.',
       };
     }
     return {
       label: 'Forte Perplexité',
-      color: 'text-rose-700 bg-rose-50 border-rose-200',
+      color: 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800',
       barColor: 'bg-rose-500',
       desc: 'Le modèle est très hésitant ou la température disperse les choix.',
     };
@@ -236,20 +327,29 @@ export const InferencePlayground: React.FC<InferencePlaygroundProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="bg-white border border-slate-200 rounded-xl p-6">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 transition-colors duration-200">
         <div className="max-w-3xl">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-indigo-50 border border-indigo-200 text-indigo-700">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300">
               Génération & Inférence
             </span>
-            <span className="text-xs text-slate-400">· Mécanisme d'attention et perplexité en temps réel</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">· Mécanisme d'attention et perplexité en temps réel</span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-2">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-2">
             Étape 3 : L'Inférence, l'Attention et la Softmax
           </h1>
-          <p className="text-slate-600 text-sm leading-relaxed">
+          <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
             Un LLM ne rédige jamais une phrase entière d'un coup. Il procède de manière <strong>autorégressive</strong> : à chaque étape, il focalise son <strong>attention</strong> sur les mots clés du passé, calcule la distribution Softmax des candidats selon la température, et évalue son niveau de certitude via la <strong>Perplexité</strong>.
           </p>
+          <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <a
+              href="#backprop-section"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+            >
+              <Workflow className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span>Explorer le Calcul des Gradients & Rétropropagation (Backpropagation) ⬇</span>
+            </a>
+          </div>
         </div>
       </div>
 
@@ -258,13 +358,21 @@ export const InferencePlayground: React.FC<InferencePlaygroundProps> = ({
         {/* Left Zone: Live Generation Stage + Attention Maps + Candidates (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
           {/* Prompt & Current Text Box */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+          <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-xs">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-semibold text-slate-900">
-                Prompt initial (début de phrase)
-              </label>
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-semibold text-slate-900">
+                  Invite de commande (Prompt en direct)
+                </label>
+                {isAutoPlaying && (
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300 animate-pulse">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                    Auto-play actif
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                <span>Suggestions :</span>
+                <span className="hidden sm:inline">Suggestions :</span>
                 {['le chat', 'le renard', 'pour faire', 'en hiver'].map(seed => (
                   <button
                     key={seed}
@@ -278,20 +386,38 @@ export const InferencePlayground: React.FC<InferencePlaygroundProps> = ({
             </div>
 
             <div className="flex gap-2">
-              <input
-                type="text"
-                value={promptText}
-                onChange={e => {
-                  setPromptText(e.target.value);
-                  handleResetGeneration();
-                }}
-                className="flex-1 text-sm bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium"
-                placeholder="Ex: le renard..."
-              />
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={promptText}
+                  onChange={e => {
+                    setPromptText(e.target.value);
+                    setInitialSeedPrompt(e.target.value);
+                    setHasEnded(false);
+                    setStepsHistory([]);
+                    setLastSampledCandidate(null);
+                    setLastGeneratedWord(null);
+                    setAutoPlayStepCount(0);
+                    setAutoPlayStatusMessage(null);
+                  }}
+                  className={`w-full text-sm rounded-lg px-3 py-2 text-slate-900 focus:outline-none font-medium transition-all ${
+                    isAutoPlaying
+                      ? 'bg-emerald-50/50 border-2 border-emerald-500 ring-2 ring-emerald-500/20 text-emerald-950 font-semibold'
+                      : 'bg-slate-50 border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500'
+                  }`}
+                  placeholder="Ex: le renard..."
+                />
+                {isAutoPlaying && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-emerald-700 font-semibold flex items-center gap-1 pointer-events-none">
+                    <Sparkles className="w-3 h-3 text-emerald-600 animate-spin" />
+                    Mise à jour en direct
+                  </span>
+                )}
+              </div>
               <button
-                onClick={handleResetGeneration}
+                onClick={handleResetToSeed}
                 className="p-2 border border-slate-200 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors cursor-pointer"
-                title="Effacer la génération"
+                title={`Réinitialiser au prompt initial : "${initialSeedPrompt}"`}
               >
                 <RotateCcw className="w-4 h-4" />
               </button>
@@ -321,7 +447,7 @@ export const InferencePlayground: React.FC<InferencePlaygroundProps> = ({
 
               <div className="flex flex-wrap items-center gap-1.5 min-h-12 text-sm">
                 {currentTokens.map((tok, idx) => {
-                  const isPrompt = idx < encodePrompt(promptText, vocabulary).length;
+                  const isSeedToken = idx < seedTokensCount;
                   const isActiveContext = activeContextTokens.some(ac => ac.id === tok.id);
 
                   return (
@@ -332,12 +458,16 @@ export const InferencePlayground: React.FC<InferencePlaygroundProps> = ({
                           ? 'ring-2 ring-indigo-500 ring-offset-1 font-semibold'
                           : ''
                       } ${getTokenColor(tok.id)}`}
-                      title={`Token: "${tok.text}" | ID: ${tok.id}`}
+                      title={`Token: "${tok.text}" | ID: ${tok.id} | ${isSeedToken ? 'Prompt initial' : 'Généré par le modèle'}`}
                     >
                       <span>{tok.text}</span>
-                      {tok.isSpecial && (
+                      {tok.isSpecial ? (
                         <span className="text-[10px] opacity-70">★</span>
-                      )}
+                      ) : !isSeedToken ? (
+                        <span className="text-[9px] text-emerald-700 font-bold opacity-80" title="Token généré automatiquement">
+                          ✦
+                        </span>
+                      ) : null}
                     </span>
                   );
                 })}
@@ -365,38 +495,149 @@ export const InferencePlayground: React.FC<InferencePlaygroundProps> = ({
               </div>
             </div>
 
-            {/* Generation Controls */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <button
-                onClick={handleGenerateNextToken}
-                disabled={hasEnded || candidates.length === 0}
-                className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed rounded-lg transition-colors cursor-pointer shadow-xs"
-              >
-                <FastForward className="w-3.5 h-3.5" />
-                <span>Prédire le prochain mot (+1 token)</span>
-              </button>
+            {/* Generation Controls with Auto-play */}
+            <div className="space-y-3 pt-2">
+              <div className="flex flex-wrap items-center gap-2.5">
+                {/* Auto-Play Main Button */}
+                <button
+                  onClick={isAutoPlaying ? handleStopAutoPlay : handleStartAutoPlay}
+                  disabled={candidates.length === 0}
+                  className={`inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg transition-all cursor-pointer shadow-xs ${
+                    isAutoPlaying
+                      ? 'bg-rose-600 hover:bg-rose-700 text-white animate-pulse ring-2 ring-rose-400/40'
+                      : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-emerald-500/20'
+                  }`}
+                  title={isAutoPlaying ? 'Interrompre l\'Auto-play' : `Générer automatiquement ${autoPlayMaxTokens} tokens consécutifs en mettant à jour l'invite`}
+                >
+                  {isAutoPlaying ? (
+                    <>
+                      <Pause className="w-4 h-4 fill-current" />
+                      <span>Arrêter Auto-play ({autoPlayStepCount}/{autoPlayMaxTokens})</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 fill-current" />
+                      <span>Auto-play ({autoPlayMaxTokens} tokens)</span>
+                    </>
+                  )}
+                </button>
 
-              <button
-                onClick={() => setIsAutoGenerating(!isAutoGenerating)}
-                disabled={hasEnded || candidates.length === 0}
-                className={`inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer border ${
-                  isAutoGenerating
-                    ? 'bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100'
-                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                {isAutoGenerating ? (
-                  <>
-                    <Pause className="w-3.5 h-3.5 fill-current" />
-                    <span>Pause</span>
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                    <span>Génération continue</span>
-                  </>
-                )}
-              </button>
+                {/* Single Step Token Button */}
+                <button
+                  onClick={() => handleGenerateStep(false)}
+                  disabled={hasEnded || candidates.length === 0 || isAutoPlaying}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed rounded-lg transition-colors cursor-pointer shadow-xs"
+                >
+                  <FastForward className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>+1 Mot (Pas à pas)</span>
+                </button>
+
+                {/* Reset to Seed Button */}
+                <button
+                  onClick={handleResetToSeed}
+                  className="inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-medium text-slate-600 hover:text-slate-900 border border-slate-200 bg-white hover:bg-slate-50 rounded-lg transition-colors cursor-pointer"
+                  title={`Réinitialiser au prompt de départ : "${initialSeedPrompt}"`}
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                  <span className="hidden sm:inline">Réinitialiser</span>
+                </button>
+              </div>
+
+              {/* Auto-Play Parameters Bar */}
+              <div className="flex flex-wrap items-center justify-between gap-3 p-2.5 bg-slate-50 rounded-lg border border-slate-200 text-xs">
+                {/* Speed selector */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-medium text-slate-500">Vitesse :</span>
+                  <div className="inline-flex items-center p-0.5 bg-white border border-slate-200 rounded-md text-[11px]">
+                    <button
+                      onClick={() => setAutoPlaySpeed(350)}
+                      className={`px-2 py-0.5 rounded transition-colors cursor-pointer ${
+                        autoPlaySpeed === 350
+                          ? 'bg-emerald-100 text-emerald-800 font-bold'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      ⚡ Rapide (350ms)
+                    </button>
+                    <button
+                      onClick={() => setAutoPlaySpeed(700)}
+                      className={`px-2 py-0.5 rounded transition-colors cursor-pointer ${
+                        autoPlaySpeed === 700
+                          ? 'bg-emerald-100 text-emerald-800 font-bold'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      🎯 Normal (700ms)
+                    </button>
+                    <button
+                      onClick={() => setAutoPlaySpeed(1200)}
+                      className={`px-2 py-0.5 rounded transition-colors cursor-pointer ${
+                        autoPlaySpeed === 1200
+                          ? 'bg-emerald-100 text-emerald-800 font-bold'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      🐢 Lent (1.2s)
+                    </button>
+                  </div>
+                </div>
+
+                {/* Token limit selector */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-medium text-slate-500">Nombre de tokens :</span>
+                  <div className="inline-flex items-center p-0.5 bg-white border border-slate-200 rounded-md text-[11px]">
+                    {[5, 10, 20].map(count => (
+                      <button
+                        key={count}
+                        onClick={() => setAutoPlayMaxTokens(count)}
+                        className={`px-2 py-0.5 rounded transition-colors cursor-pointer ${
+                          autoPlayMaxTokens === count
+                            ? 'bg-indigo-100 text-indigo-800 font-bold'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        {count} tokens
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Active Auto-Play Progress / Status Feedback */}
+              {(isAutoPlaying || autoPlayStatusMessage || lastGeneratedWord) && (
+                <div className="p-3 bg-white rounded-lg border border-slate-200 text-xs space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {isAutoPlaying ? (
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block" />
+                      ) : (
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                      )}
+                      <span className="font-semibold text-slate-800">
+                        {isAutoPlaying
+                          ? `Génération automatique en cours (token ${autoPlayStepCount} / ${autoPlayMaxTokens})`
+                          : (autoPlayStatusMessage || 'Génération terminée')}
+                      </span>
+                    </div>
+
+                    {lastGeneratedWord && (
+                      <span className="font-mono text-[11px] px-2 py-0.5 bg-slate-100 rounded text-slate-700">
+                        Dernier token : <strong>« {lastGeneratedWord} »</strong>
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300 rounded-full"
+                      style={{
+                        width: `${Math.min(100, Math.round((autoPlayStepCount / autoPlayMaxTokens) * 100))}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1078,6 +1319,17 @@ export const InferencePlayground: React.FC<InferencePlaygroundProps> = ({
             )}
           </div>
         </div>
+      </div>
+
+      {/* Section Dédiée : Calcul des Gradients & Rétropropagation (Backpropagation) */}
+      <div id="backprop-section" className="pt-2">
+        <BackpropagationVisualizer
+          activeContextTokens={activeContextTokens}
+          candidates={candidates}
+          vocabulary={vocabulary}
+          temperature={temperature}
+          contextWindow={contextWindow}
+        />
       </div>
     </div>
   );

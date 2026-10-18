@@ -79,6 +79,8 @@ export interface PredefinedDataset {
   description: string;
   text: string;
   suggestedPrompt: string;
+  lang?: 'fr' | 'en';
+  category?: string;
 }
 
 export interface FineTunePair {

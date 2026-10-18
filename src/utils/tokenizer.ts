@@ -6,22 +6,22 @@ export const UNKNOWN_TOKEN = '<INCONNU>';
 
 // Palette of pleasing distinct token background colors for visualization
 export const TOKEN_COLORS = [
-  'bg-blue-50 text-blue-800 border-blue-200',
-  'bg-emerald-50 text-emerald-800 border-emerald-200',
-  'bg-amber-50 text-amber-800 border-amber-200',
-  'bg-purple-50 text-purple-800 border-purple-200',
-  'bg-rose-50 text-rose-800 border-rose-200',
-  'bg-cyan-50 text-cyan-800 border-cyan-200',
-  'bg-indigo-50 text-indigo-800 border-indigo-200',
-  'bg-teal-50 text-teal-800 border-teal-200',
-  'bg-orange-50 text-orange-800 border-orange-200',
-  'bg-pink-50 text-pink-800 border-pink-200',
-  'bg-lime-50 text-lime-800 border-lime-200',
-  'bg-violet-50 text-violet-800 border-violet-200',
+  'bg-blue-50 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+  'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+  'bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+  'bg-purple-50 dark:bg-purple-950/70 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+  'bg-rose-50 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+  'bg-cyan-50 dark:bg-cyan-950/70 text-cyan-800 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800',
+  'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-800 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
+  'bg-teal-50 dark:bg-teal-950/70 text-teal-800 dark:text-teal-300 border-teal-200 dark:border-teal-800',
+  'bg-orange-50 dark:bg-orange-950/70 text-orange-800 dark:text-orange-300 border-orange-200 dark:border-orange-800',
+  'bg-pink-50 dark:bg-pink-950/70 text-pink-800 dark:text-pink-300 border-pink-200 dark:border-pink-800',
+  'bg-lime-50 dark:bg-lime-950/70 text-lime-800 dark:text-lime-300 border-lime-200 dark:border-lime-800',
+  'bg-violet-50 dark:bg-violet-950/70 text-violet-800 dark:text-violet-300 border-violet-200 dark:border-violet-800',
 ];
 
 export function getTokenColor(tokenId: number): string {
-  if (tokenId < 0) return 'bg-slate-100 text-slate-700 border-slate-300';
+  if (tokenId < 0) return 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700';
   return TOKEN_COLORS[tokenId % TOKEN_COLORS.length];
 }
 

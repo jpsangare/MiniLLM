@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -7,4 +9,80 @@
   code, pre, .font-mono {
     font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
+}
+
+/* Global Dark Mode Polish & Contrast */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #020617;
+  color: #f1f5f9;
+}
+
+/* Automatically style standard cards and surface backgrounds in dark mode */
+html.dark .bg-white:not([data-theme-ignore]) {
+  background-color: #0f172a;
+}
+
+html.dark .bg-slate-50:not([data-theme-ignore]) {
+  background-color: #090e1a;
+}
+
+html.dark .bg-slate-100:not([data-theme-ignore]) {
+  background-color: #1e293b;
+}
+
+html.dark .border-slate-200:not([data-theme-ignore]),
+html.dark .border-slate-200\/80:not([data-theme-ignore]),
+html.dark .border-slate-100:not([data-theme-ignore]) {
+  border-color: #334155;
+}
+
+html.dark .border-slate-300:not([data-theme-ignore]) {
+  border-color: #475569;
+}
+
+html.dark .text-slate-900:not([data-theme-ignore]) {
+  color: #f8fafc;
+}
+
+html.dark .text-slate-800:not([data-theme-ignore]) {
+  color: #f1f5f9;
+}
+
+html.dark .text-slate-700:not([data-theme-ignore]) {
+  color: #cbd5e1;
+}
+
+html.dark .text-slate-600:not([data-theme-ignore]) {
+  color: #94a3b8;
+}
+
+/* Ensure inputs and textareas adapt comfortably in dark mode */
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark textarea,
+html.dark select {
+  background-color: #0f172a;
+  color: #f8fafc;
+  border-color: #334155;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #64748b;
+}
+
+/* Soft hover treatments */
+html.dark .hover\:bg-slate-50:hover:not([data-theme-ignore]) {
+  background-color: #1e293b;
+}
+
+html.dark .hover\:bg-slate-100:hover:not([data-theme-ignore]) {
+  background-color: #334155;
+}
+
+html.dark .hover\:border-slate-300:hover:not([data-theme-ignore]) {
+  border-color: #64748b;
 }

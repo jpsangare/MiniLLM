@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { PredefinedDataset, Token, Vocabulary } from '../types/llm';
+import React, { useState, useMemo } from 'react';
+import { PredefinedDataset, Vocabulary } from '../types/llm';
 import { PREDEFINED_DATASETS } from '../data/defaultDatasets';
 import { getTokenColor } from '../utils/tokenizer';
-import { BookOpen, HelpCircle, ArrowRight, Check, Sparkles } from 'lucide-react';
+import { BookOpen, ArrowRight, Sparkles, Filter } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 interface DatasetTokenSectionProps {
   corpusText: string;
@@ -24,13 +25,22 @@ export const DatasetTokenSection: React.FC<DatasetTokenSectionProps> = ({
   selectedDatasetId,
   setSelectedDatasetId,
   onNavigateToWeights,
-  onTriggerTrain,
-  isTraining,
 }) => {
+  const { t, language } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
-  const [customPromptTest, setCustomPromptTest] = useState('le chat mange');
+  const [langFilter, setLangFilter] = useState<'all' | 'fr' | 'en'>(language);
+
+  // Sync langFilter with global language if changed
+  React.useEffect(() => {
+    setLangFilter(language);
+  }, [language]);
 
   const totalTokens = sentences.reduce((acc, s) => acc + s.length, 0);
+
+  const filteredDatasets = useMemo(() => {
+    if (langFilter === 'all') return PREDEFINED_DATASETS;
+    return PREDEFINED_DATASETS.filter(d => d.lang === langFilter);
+  }, [langFilter]);
 
   const filteredVocab = vocabulary.tokens.filter(t =>
     t.text.toLowerCase().includes(searchTerm.toLowerCase())
@@ -41,23 +51,25 @@ export const DatasetTokenSection: React.FC<DatasetTokenSectionProps> = ({
     setCorpusText(dataset.text);
   };
 
+  const isEnglish = language === 'en';
+
   return (
     <div className="space-y-6">
       {/* Top Banner: Concept Introduction */}
-      <div className="bg-white border border-slate-200 rounded-xl p-6">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 transition-colors duration-200">
         <div className="max-w-3xl">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-2">
-            Étape 1 : Les Données d'Entraînement et la Tokenisation
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 mb-2">
+            {t('data.banner.title')}
           </h1>
-          <p className="text-slate-600 text-sm leading-relaxed">
-            Un grand modèle de langage (LLM comme GPT ou Gemini) n'a aucune pensée innée. Il commence toujours par un <strong>corpus de texte</strong>. Avant de calculer, il découpe ce texte en fragments appelés <strong>tokens</strong> et leur associe un numéro d'identification unique (Token ID).
+          <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
+            {t('data.banner.desc')}
           </p>
-          <div className="flex items-center gap-3 text-xs text-slate-500 mt-3 pt-3 border-t border-slate-100">
-            <span>{sentences.length} phrases d'apprentissage</span>
+          <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <span>{sentences.length} {t('data.banner.sentences')}</span>
             <span aria-hidden="true">·</span>
-            <span className="font-mono tabular-nums">{totalTokens} tokens au total</span>
+            <span className="font-mono tabular-nums">{totalTokens} {t('data.banner.totalTokens')}</span>
             <span aria-hidden="true">·</span>
-            <span className="font-mono tabular-nums">{vocabulary.tokens.length} tokens uniques dans le dictionnaire</span>
+            <span className="font-mono tabular-nums">{vocabulary.tokens.length} {t('data.banner.uniqueTokens')}</span>
           </div>
         </div>
       </div>
@@ -67,16 +79,57 @@ export const DatasetTokenSection: React.FC<DatasetTokenSectionProps> = ({
         {/* Left Zone: Corpus Selector & Live Tokenized Text (7 cols) */}
         <div className="lg:col-span-7 space-y-6">
           {/* Preset Buttons */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-semibold text-slate-900">
-                Choisir un corpus d'apprentissage
-              </label>
-              <span className="text-xs text-slate-400">Cliquez pour charger</span>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 transition-colors duration-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <label className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  {t('data.corpus.choose')}
+                </label>
+                <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                  {t('data.corpus.clickToLoad')}
+                </p>
+              </div>
+
+              {/* Language filter for datasets */}
+              <div className="inline-flex items-center p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 self-start sm:self-auto text-xs">
+                <button
+                  type="button"
+                  onClick={() => setLangFilter('all')}
+                  className={`px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer ${
+                    langFilter === 'all'
+                      ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-2xs font-semibold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  {t('data.corpus.filterAll')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLangFilter('fr')}
+                  className={`px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer ${
+                    langFilter === 'fr'
+                      ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-2xs font-semibold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  {t('data.corpus.filterFr')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLangFilter('en')}
+                  className={`px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer ${
+                    langFilter === 'en'
+                      ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-2xs font-semibold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  {t('data.corpus.filterEn')}
+                </button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {PREDEFINED_DATASETS.map(dataset => {
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+              {filteredDatasets.map(dataset => {
                 const isSelected = selectedDatasetId === dataset.id;
                 return (
                   <button
@@ -84,16 +137,26 @@ export const DatasetTokenSection: React.FC<DatasetTokenSectionProps> = ({
                     onClick={() => handleSelectPreset(dataset)}
                     className={`p-3 text-left rounded-lg border transition-all cursor-pointer ${
                       isSelected
-                        ? 'border-indigo-600 bg-indigo-50/50 shadow-xs'
-                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                        ? 'border-indigo-600 dark:border-indigo-500 bg-indigo-50/70 dark:bg-indigo-950/50 shadow-xs'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60'
                     }`}
                   >
-                    <div className="text-xs font-semibold text-slate-900 truncate">
-                      {dataset.title}
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
+                        {dataset.title}
+                      </div>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-sm font-semibold uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shrink-0">
+                        {dataset.lang === 'fr' ? '🇫🇷 FR' : '🇬🇧 EN'}
+                      </span>
                     </div>
-                    <div className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2">
                       {dataset.description}
                     </div>
+                    {dataset.suggestedPrompt && (
+                      <div className="mt-2 text-[10px] text-indigo-600 dark:text-indigo-400 font-mono truncate">
+                        Prompt : "{dataset.suggestedPrompt}"
+                      </div>
+                    )}
                   </button>
                 );
               })}
@@ -102,11 +165,11 @@ export const DatasetTokenSection: React.FC<DatasetTokenSectionProps> = ({
             {/* Editable Corpus Box */}
             <div className="pt-2">
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-medium text-slate-700">
-                  Texte brut d'entraînement (éditable en direct)
+                <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                  {t('data.corpus.rawLabel')}
                 </label>
-                <span className="text-xs text-slate-400">
-                  Une phrase par ligne
+                <span className="text-xs text-slate-400 dark:text-slate-500">
+                  {t('data.corpus.oneLine')}
                 </span>
               </div>
               <textarea
@@ -116,21 +179,23 @@ export const DatasetTokenSection: React.FC<DatasetTokenSectionProps> = ({
                   setSelectedDatasetId('custom');
                 }}
                 rows={7}
-                className="w-full font-mono text-xs text-slate-800 bg-slate-50 border border-slate-200 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all leading-relaxed"
-                placeholder="Entrez vos propres phrases pour entraîner le modèle..."
+                className="w-full font-mono text-xs text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all leading-relaxed"
+                placeholder={t('data.corpus.placeholder')}
               />
             </div>
           </div>
 
           {/* Live Tokenization Visualizer */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 transition-colors duration-200">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-sm font-semibold text-slate-900">
-                  Visualisation de la Tokenisation en direct
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  {t('data.live.title')}
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Chaque mot reçoit un identifiant numérique (ID). Notez les balises spéciales <code>&lt;DEBUT&gt;</code> et <code>&lt;FIN&gt;</code> ajoutées à chaque phrase.
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {isEnglish
+                    ? 'Each word receives a numerical identifier (ID). Note the special tags <START> and <END> added to each sequence.'
+                    : 'Chaque mot reçoit un identifiant numérique (ID). Notez les balises spéciales <DEBUT> et <FIN> ajoutées à chaque phrase.'}
                 </p>
               </div>
             </div>
@@ -140,18 +205,18 @@ export const DatasetTokenSection: React.FC<DatasetTokenSectionProps> = ({
               {sentences.map((sentence, sIdx) => (
                 <div
                   key={sIdx}
-                  className="p-2.5 rounded-lg bg-slate-50 border border-slate-100 flex flex-wrap items-center gap-1.5 text-xs"
+                  className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 flex flex-wrap items-center gap-1.5 text-xs"
                 >
-                  <span className="text-[10px] text-slate-400 font-mono w-5 shrink-0">
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono w-5 shrink-0">
                     #{sIdx + 1}
                   </span>
 
                   {/* Start Token */}
                   <span
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[11px] font-mono bg-slate-200 text-slate-800 border-slate-300"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[11px] font-mono bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-600"
                     title={`Token ID: ${vocabulary.startTokenId}`}
                   >
-                    <span>&lt;DEBUT&gt;</span>
+                    <span>{isEnglish ? '<START>' : '<DEBUT>'}</span>
                     <span className="opacity-60 text-[9px] tabular-nums">({vocabulary.startTokenId})</span>
                   </span>
 
@@ -173,10 +238,10 @@ export const DatasetTokenSection: React.FC<DatasetTokenSectionProps> = ({
 
                   {/* End Token */}
                   <span
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[11px] font-mono bg-slate-200 text-slate-800 border-slate-300"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[11px] font-mono bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 border-slate-300 dark:border-slate-600"
                     title={`Token ID: ${vocabulary.endTokenId}`}
                   >
-                    <span>&lt;FIN&gt;</span>
+                    <span>{isEnglish ? '<END>' : '<FIN>'}</span>
                     <span className="opacity-60 text-[9px] tabular-nums">({vocabulary.endTokenId})</span>
                   </span>
                 </div>
@@ -184,15 +249,15 @@ export const DatasetTokenSection: React.FC<DatasetTokenSectionProps> = ({
             </div>
 
             {/* Action Bar */}
-            <div className="pt-2 flex items-center justify-between border-t border-slate-100">
-              <span className="text-xs text-slate-500">
-                Prêt pour l'apprentissage statistique
+            <div className="pt-2 flex items-center justify-between border-t border-slate-100 dark:border-slate-800">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                {t('data.live.ready')}
               </span>
               <button
                 onClick={onNavigateToWeights}
-                className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer shadow-xs"
+                className="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors cursor-pointer shadow-xs"
               >
-                <span>Afficher mon modèle LLM</span>
+                <span>{t('data.live.nextBtn')}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -202,51 +267,54 @@ export const DatasetTokenSection: React.FC<DatasetTokenSectionProps> = ({
         {/* Right Zone: Vocabulary Dictionary & Key Insights (5 cols) */}
         <div className="lg:col-span-5 space-y-6">
           {/* Vocab Table */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 transition-colors duration-200">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-semibold text-slate-900">
-                  Dictionnaire de Vocabulaire (V)
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  {t('data.vocab.title')}
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Taille du vocabulaire : <span className="font-semibold text-slate-700 tabular-nums">{vocabulary.tokens.length} tokens</span>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {t('data.vocab.size')}{' '}
+                  <span className="font-semibold text-slate-700 dark:text-slate-200 tabular-nums">
+                    {vocabulary.tokens.length} {t('header.tokens')}
+                  </span>
                 </p>
               </div>
             </div>
 
             <input
               type="text"
-              placeholder="Filtrer un token..."
+              placeholder={t('data.vocab.search')}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              className="w-full text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
             />
 
-            <div className="max-h-72 overflow-y-auto border border-slate-100 rounded-lg">
+            <div className="max-h-72 overflow-y-auto border border-slate-100 dark:border-slate-800 rounded-lg">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 text-slate-500 border-b border-slate-100 sticky top-0">
+                <thead className="bg-slate-50 dark:bg-slate-800/70 text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800 sticky top-0">
                   <tr>
-                    <th className="py-2 px-3 font-medium">ID</th>
-                    <th className="py-2 px-3 font-medium">Token</th>
-                    <th className="py-2 px-3 font-medium text-right">Rôle</th>
+                    <th className="py-2 px-3 font-medium">{t('data.vocab.colId')}</th>
+                    <th className="py-2 px-3 font-medium">{t('data.vocab.colToken')}</th>
+                    <th className="py-2 px-3 font-medium text-right">{t('data.vocab.colRole')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {filteredVocab.map(token => (
-                    <tr key={token.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="py-2 px-3 font-mono text-slate-500 tabular-nums">
+                    <tr key={token.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="py-2 px-3 font-mono text-slate-500 dark:text-slate-400 tabular-nums">
                         {token.id}
                       </td>
-                      <td className="py-2 px-3 font-medium text-slate-800">
+                      <td className="py-2 px-3 font-medium text-slate-800 dark:text-slate-200">
                         <span className={`px-2 py-0.5 rounded border text-[11px] font-mono ${getTokenColor(token.id)}`}>
                           {token.text}
                         </span>
                       </td>
-                      <td className="py-2 px-3 text-right text-[11px] text-slate-500">
+                      <td className="py-2 px-3 text-right text-[11px] text-slate-500 dark:text-slate-400">
                         {token.isSpecial ? (
-                          <span className="text-indigo-600 font-medium">Balise spéciale</span>
+                          <span className="text-indigo-600 dark:text-indigo-400 font-medium">{t('data.vocab.specialTag')}</span>
                         ) : (
-                          <span>Mot régulier</span>
+                          <span>{t('data.vocab.regularWord')}</span>
                         )}
                       </td>
                     </tr>
@@ -257,21 +325,21 @@ export const DatasetTokenSection: React.FC<DatasetTokenSectionProps> = ({
           </div>
 
           {/* Educational Concept Box */}
-          <div className="bg-slate-900 text-white rounded-xl p-5 space-y-3">
+          <div className="bg-slate-900 text-white rounded-xl p-5 space-y-3 shadow-md">
             <div className="flex items-center gap-2 text-indigo-400">
               <BookOpen className="w-4 h-4" />
               <span className="text-xs font-semibold tracking-wide uppercase">
-                Ce qu'il faut retenir
+                {t('data.takeaway.title')}
               </span>
             </div>
             <h4 className="text-sm font-semibold text-white">
-              L'ordinateur ne comprend pas les lettres
+              {t('data.takeaway.heading')}
             </h4>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Pour une machine, le mot <em>"chat"</em> n'a aucun sens. En associant chaque token à un nombre entier (son <strong>Token ID</strong>), le modèle peut convertir ces identifiants en coordonnées mathématiques (appelées <em>embeddings</em> ou vecteurs).
+              {t('data.takeaway.p1')}
             </p>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Dans les modèles récents comme GPT-4 ou Gemini, la tokenisation utilise des morceaux de mots (ex: subwords ou BPE) et le vocabulaire compte souvent 32 000 à 100 000 tokens !
+              {t('data.takeaway.p2')}
             </p>
           </div>
         </div>
